@@ -19,7 +19,7 @@ directory within.  Defaults to the current directory.
 
 Use `cargo build`.
 
-# License
+## License
 
 `rust-git-fs` is distributed under the terms of both the MIT license and the
 Apache License (Version 2.0).  See LICENSE-APACHE, and LICENSE-MIT for details.
