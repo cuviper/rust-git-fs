@@ -1,4 +1,6 @@
-# rust-git-fs: a FUSE implementation for Git objects
+# rust-git-fs
+
+A FUSE implementation for Git objects.
 
 With `git-fs` one can mount a Git tree as a filesystem, then browse any
 branch/commit/etc. without needing to actually check them out.
