@@ -10,6 +10,8 @@
 
 #![deny(missing_doc)]
 
+#![feature(if_let)]
+
 #![feature(phase)]
 #[phase(plugin)]
 extern crate probe;
@@ -19,6 +21,7 @@ extern crate git2;
 extern crate libc;
 extern crate time;
 
+use std::collections::hashmap;
 use std::default::Default;
 use std::io;
 use std::u64;
@@ -108,10 +111,6 @@ impl<'a> GitFS<'a> {
             flags: 0,
         }
     }
-
-    fn prepare(&mut self, ino: u64) {
-        self.inodes.prepare(ino, &mut self.mapper, &self.repo)
-    }
 }
 
 impl<'a> fuse::Filesystem for GitFS<'a> {
@@ -134,7 +133,6 @@ impl<'a> fuse::Filesystem for GitFS<'a> {
         probe!(gitfs, lookup, parent, name.to_c_str().as_ptr());
 
         let id = {
-            self.prepare(parent);
             let inode = self.inodes.find(parent);
             match inode.and_then(|inode| inode.lookup(name)) {
                 Ok(id) => id,
@@ -143,8 +141,15 @@ impl<'a> fuse::Filesystem for GitFS<'a> {
         };
         let ino = self.mapper.get_ino(id);
 
+        if let hashmap::Vacant(entry) = self.inodes.entry(ino) {
+            if let Some(oid) = self.mapper.get_oid(ino) {
+                if let Some(inode) = inode::new_inode(&self.repo, oid) {
+                    entry.set(inode);
+                }
+            }
+        }
+
         let attr = self.defattr(ino);
-        self.prepare(ino);
         let inode = self.inodes.find(ino);
         match inode.and_then(|inode| inode.getattr(attr)) {
             Ok(attr) => reply.entry(&TTY, &attr, 1),
@@ -163,7 +168,6 @@ impl<'a> fuse::Filesystem for GitFS<'a> {
         probe!(gitfs, getattr, ino);
 
         let attr = self.defattr(ino);
-        self.prepare(ino);
         let inode = self.inodes.find(ino);
         match inode.and_then(|inode| inode.getattr(attr)) {
             Ok(attr) => reply.attr(&TTY, &attr),
@@ -175,7 +179,6 @@ impl<'a> fuse::Filesystem for GitFS<'a> {
              reply: fuse::ReplyData) {
         probe!(gitfs, read, ino, offset, size);
 
-        self.prepare(ino);
         let inode = self.inodes.find(ino);
         match inode.and_then(|inode| inode.read(offset, size)) {
             Ok(data) => reply.data(data),
@@ -187,7 +190,6 @@ impl<'a> fuse::Filesystem for GitFS<'a> {
                 mut reply: fuse::ReplyDirectory) {
         probe!(gitfs, readdir, ino, offset);
 
-        self.prepare(ino);
         let mapper = &mut self.mapper;
         let inode = self.inodes.find(ino);
         match inode.and_then(|inode| {

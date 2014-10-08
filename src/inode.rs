@@ -114,23 +114,15 @@ impl<'a> InodeContainer<'a> {
         self.inodes.find(&ino).ok_or(posix88::ENOENT)
     }
 
-    pub fn prepare(&mut self, ino: u64, mapper: &mut InodeMapper, repo: &'a git2::Repository) {
-        match self.inodes.entry(ino) {
-            hashmap::Occupied(_) => (),
-            hashmap::Vacant(entry) => {
-                match mapper.get_oid(ino).and_then(|oid| new_inode(repo, oid)) {
-                    Some(inode) => { entry.set(inode); },
-                    None => (),
-                }
-            },
-        }
+    pub fn entry(&'a mut self, ino: u64) -> hashmap::Entry<u64, Box<Inode>> {
+        self.inodes.entry(ino)
     }
 }
 
 
 /// Creates an Inode from any Oid.
 // FIXME see the note on Id about 1:1 mapping trouble
-fn new_inode(repo: &git2::Repository, oid: git2::Oid) -> Option<Box<Inode>> {
+pub fn new_inode(repo: &git2::Repository, oid: git2::Oid) -> Option<Box<Inode>> {
     match repo.find_object(oid, None).ok().and_then(|o| o.kind()) {
         Some(git2::ObjectBlob) => {
             repo.find_blob(oid).ok().map(|blob| blob::Blob::new(blob))
