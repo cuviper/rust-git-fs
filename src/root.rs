@@ -49,7 +49,7 @@ impl<'a> inode::Inode for Root<'a> {
             size: size,
             blocks: inode::st_blocks(size),
             kind: io::TypeDirectory,
-            perm: io::UserDir,
+            perm: io::USER_DIR,
             ..attr
         })
     }

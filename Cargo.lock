@@ -4,7 +4,7 @@ version = "0.0.1-pre"
 dependencies = [
  "git2 0.0.1 (git+https://github.com/alexcrichton/git2-rs#b83596ed7b811973ea3aa8b115716715982d95f1)",
  "probe 0.1.0 (git+https://github.com/cuviper/rust-libprobe#9f1ca4985517e562c57bf9638c2f0e524f1e32c5)",
- "rust-fuse 0.2.0 (git+https://github.com/cuviper/rust-fuse?ref=rust-nightly#51300850a66bed6d58dbd40ef87c56001dbfc00f)",
+ "rust-fuse 0.2.0 (git+https://github.com/cuviper/rust-fuse?ref=rust-nightly#ff977d48f588271e4117fc33bf5e93927f5432d5)",
 ]
 
 [[package]]
@@ -54,7 +54,7 @@ source = "git+https://github.com/cuviper/rust-libprobe#9f1ca4985517e562c57bf9638
 [[package]]
 name = "rust-fuse"
 version = "0.2.0"
-source = "git+https://github.com/cuviper/rust-fuse?ref=rust-nightly#51300850a66bed6d58dbd40ef87c56001dbfc00f"
+source = "git+https://github.com/cuviper/rust-fuse?ref=rust-nightly#ff977d48f588271e4117fc33bf5e93927f5432d5"
 
 [[package]]
 name = "url"

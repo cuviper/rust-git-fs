@@ -224,7 +224,7 @@ struct DirHandle {
 
 impl DirHandle {
     fn new(path: &Path) -> Option<DirHandle> {
-        io::fs::mkdir(path, io::UserDir).ok()
+        io::fs::mkdir(path, io::USER_DIR).ok()
             .map(|()| DirHandle { path: path.clone() })
     }
 }

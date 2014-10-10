@@ -37,7 +37,7 @@ impl<'a> inode::Inode for Blob<'a> {
             size: size,
             blocks: inode::st_blocks(size),
             kind: io::TypeFile,
-            perm: io::UserFile,
+            perm: io::USER_FILE,
             ..attr
         })
     }
