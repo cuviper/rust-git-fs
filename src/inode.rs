@@ -45,9 +45,19 @@ pub trait Inode {
         Err(posix88::EINVAL)
     }
 
+    /// Open a file.
+    fn open(&mut self, _repo: &git2::Repository, _flags: uint) -> Result<u32, libc::c_int> {
+        Err(posix88::EISDIR)
+    }
+
     /// Read data from this Inode.
     fn read(&mut self, _repo: &git2::Repository, _offset: u64, _size: uint
            ) -> Result<&[u8], libc::c_int> {
+        Err(posix88::EISDIR)
+    }
+
+    /// Release data from an opened file.
+    fn release(&mut self, _repo: &git2::Repository) -> Result<(), libc::c_int> {
         Err(posix88::EISDIR)
     }
 

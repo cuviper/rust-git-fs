@@ -6,6 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use fuse;
 use git2;
 use libc;
 use libc::consts::os::posix88;
@@ -15,45 +16,62 @@ use inode;
 
 /// Git blobs are represented as files
 // FIXME needs context, e.g. permissions from TreeEntry and timestamps from Commit
-// FIXME it's probably a waste of memory to keep git2::Blob in memory all the time.  If the Inode
-// functions passed a repo parameter, we could remember just the Oid and look it up dynamically.
-pub struct Blob<'a> {
-    blob: git2::Blob<'a>,
+pub struct Blob {
+    oid: git2::Oid,
+    size: u64,
+    data: Option<Vec<u8>>,
 }
 
-impl<'a> Blob<'a> {
-    pub fn new(blob: git2::Blob<'a>) -> Box<inode::Inode> {
+impl Blob {
+    pub fn new(blob: git2::Blob) -> Box<inode::Inode> {
         box Blob {
-            blob: blob,
+            oid: blob.id(),
+            size: blob.content().len() as u64,
+            data: None,
         }
     }
 }
 
-impl<'a> inode::Inode for Blob<'a> {
+impl inode::Inode for Blob {
     fn getattr(&mut self, _repo: &git2::Repository, attr: inode::FileAttr
               ) -> Result<inode::FileAttr, libc::c_int> {
-        let size = self.blob.content().len() as u64;
         Ok(inode::FileAttr {
-            size: size,
-            blocks: inode::st_blocks(size),
+            size: self.size,
+            blocks: inode::st_blocks(self.size),
             kind: io::TypeFile,
             perm: io::USER_FILE,
             ..attr
         })
     }
 
+    fn open(&mut self, repo: &git2::Repository, _flags: uint) -> Result<u32, libc::c_int> {
+        if self.data.is_none() {
+            if let Ok(blob) = repo.find_blob(self.oid) {
+                self.data = Some(blob.content().to_vec());
+            } else {
+                return Err(posix88::EIO)
+            }
+        }
+        Ok(fuse::consts::FOPEN_KEEP_CACHE)
+    }
+
     fn read(&mut self, _repo: &git2::Repository, offset: u64, size: uint
            ) -> Result<&[u8], libc::c_int> {
-        let data = self.blob.content();
-        if offset <= data.len() as u64 {
-            let data = data.slice_from(offset as uint);
-            Ok(if size < data.len() {
-                data.slice_to(size)
-            } else {
-                data
-            })
-        } else {
-            Err(posix88::EINVAL)
+        if let Some(ref data) = self.data {
+            if offset <= data.len() as u64 {
+                let data = data.slice_from(offset as uint);
+                return Ok(if size < data.len() {
+                    data.slice_to(size)
+                } else {
+                    data
+                })
+            }
         }
+        Err(posix88::EINVAL)
+    }
+
+    fn release (&mut self, _repo: &git2::Repository) -> Result<(), libc::c_int> {
+        self.data.take();
+        Ok(())
     }
 }

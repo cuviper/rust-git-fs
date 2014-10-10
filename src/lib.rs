@@ -177,6 +177,16 @@ impl<'a> fuse::Filesystem for GitFS<'a> {
         }
     }
 
+    fn open (&mut self, _req: &fuse::Request, ino: u64, flags: uint, reply: fuse::ReplyOpen) {
+        probe!(gitfs, open, ino, flags);
+
+        let repo = &self.repo;
+        let inode = self.inodes.find_mut(ino);
+        match inode.and_then(|inode| inode.open(repo, flags)) {
+            Ok(flags) => reply.opened(0, flags),
+            Err(rc) => reply.error(rc),
+        }
+    }
     fn read (&mut self, _req: &fuse::Request, ino: u64, _fh: u64, offset: u64, size: uint,
              reply: fuse::ReplyData) {
         probe!(gitfs, read, ino, offset, size);
@@ -185,6 +195,18 @@ impl<'a> fuse::Filesystem for GitFS<'a> {
         let inode = self.inodes.find_mut(ino);
         match inode.and_then(|inode| inode.read(repo, offset, size)) {
             Ok(data) => reply.data(data),
+            Err(rc) => reply.error(rc),
+        }
+    }
+
+    fn release (&mut self, _req: &fuse::Request, ino: u64, _fh: u64, _flags: uint,
+                _lock_owner: u64, _flush: bool, reply: fuse::ReplyEmpty) {
+        probe!(gitfs, release, ino);
+
+        let repo = &self.repo;
+        let inode = self.inodes.find_mut(ino);
+        match inode.and_then(|inode| inode.release(repo)) {
+            Ok(()) => reply.ok(),
             Err(rc) => reply.error(rc),
         }
     }
