@@ -132,9 +132,10 @@ impl<'a> fuse::Filesystem for GitFS<'a> {
               reply: fuse::ReplyEntry) {
         probe!(gitfs, lookup, parent, name.to_c_str().as_ptr());
 
+        let repo = &self.repo;
         let id = {
-            let inode = self.inodes.find(parent);
-            match inode.and_then(|inode| inode.lookup(name)) {
+            let inode = self.inodes.find_mut(parent);
+            match inode.and_then(|inode| inode.lookup(repo, name)) {
                 Ok(id) => id,
                 Err(rc) => return reply.error(rc),
             }
@@ -150,8 +151,8 @@ impl<'a> fuse::Filesystem for GitFS<'a> {
         }
 
         let attr = self.defattr(ino);
-        let inode = self.inodes.find(ino);
-        match inode.and_then(|inode| inode.getattr(attr)) {
+        let inode = self.inodes.find_mut(ino);
+        match inode.and_then(|inode| inode.getattr(repo, attr)) {
             Ok(attr) => reply.entry(&TTY, &attr, 1),
             Err(rc) => reply.error(rc),
         }
@@ -168,8 +169,9 @@ impl<'a> fuse::Filesystem for GitFS<'a> {
         probe!(gitfs, getattr, ino);
 
         let attr = self.defattr(ino);
-        let inode = self.inodes.find(ino);
-        match inode.and_then(|inode| inode.getattr(attr)) {
+        let repo = &self.repo;
+        let inode = self.inodes.find_mut(ino);
+        match inode.and_then(|inode| inode.getattr(repo, attr)) {
             Ok(attr) => reply.attr(&TTY, &attr),
             Err(rc) => reply.error(rc),
         }
@@ -179,8 +181,9 @@ impl<'a> fuse::Filesystem for GitFS<'a> {
              reply: fuse::ReplyData) {
         probe!(gitfs, read, ino, offset, size);
 
-        let inode = self.inodes.find(ino);
-        match inode.and_then(|inode| inode.read(offset, size)) {
+        let repo = &self.repo;
+        let inode = self.inodes.find_mut(ino);
+        match inode.and_then(|inode| inode.read(repo, offset, size)) {
             Ok(data) => reply.data(data),
             Err(rc) => reply.error(rc),
         }
@@ -191,7 +194,8 @@ impl<'a> fuse::Filesystem for GitFS<'a> {
         probe!(gitfs, readdir, ino, offset);
 
         let mapper = &mut self.mapper;
-        let inode = self.inodes.find(ino);
+        let repo = &self.repo;
+        let inode = self.inodes.find_mut(ino);
         match inode.and_then(|inode| {
             if offset == 0 {
                 offset += 1;
@@ -201,7 +205,7 @@ impl<'a> fuse::Filesystem for GitFS<'a> {
                 offset += 1;
                 reply.add(u64::MAX, offset, io::TypeDirectory, &PosixPath::new(".."));
             }
-            inode.readdir(offset - 2, |id, kind, path| {
+            inode.readdir(repo, offset - 2, |id, kind, path| {
                 offset += 1;
                 reply.add(mapper.get_ino(id), offset, kind, path)
             })

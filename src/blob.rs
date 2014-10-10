@@ -30,7 +30,8 @@ impl<'a> Blob<'a> {
 }
 
 impl<'a> inode::Inode for Blob<'a> {
-    fn getattr(&self, attr: inode::FileAttr) -> Result<inode::FileAttr, libc::c_int> {
+    fn getattr(&mut self, _repo: &git2::Repository, attr: inode::FileAttr
+              ) -> Result<inode::FileAttr, libc::c_int> {
         let size = self.blob.content().len() as u64;
         Ok(inode::FileAttr {
             size: size,
@@ -41,7 +42,8 @@ impl<'a> inode::Inode for Blob<'a> {
         })
     }
 
-    fn read (&self, offset: u64, size: uint) -> Result<&[u8], libc::c_int> {
+    fn read(&mut self, _repo: &git2::Repository, offset: u64, size: uint
+           ) -> Result<&[u8], libc::c_int> {
         let data = self.blob.content();
         if offset <= data.len() as u64 {
             let data = data.slice_from(offset as uint);

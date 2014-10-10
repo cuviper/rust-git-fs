@@ -34,23 +34,27 @@ pub enum Id {
 /// A generic interface for different Git object types to implement.
 pub trait Inode {
     /// Find a directory entry in this Inode by name.
-    fn lookup(&self, _name: &PosixPath) -> Result<Id, libc::c_int> {
+    fn lookup(&mut self, _repo: &git2::Repository, _name: &PosixPath
+             ) -> Result<Id, libc::c_int> {
         Err(posix88::ENOTDIR)
     }
 
     /// Get the attributes of this Inode.
-    fn getattr(&self, _attr: FileAttr) -> Result<FileAttr, libc::c_int> {
+    fn getattr(&mut self, _repo: &git2::Repository, _attr: FileAttr
+              ) -> Result<FileAttr, libc::c_int> {
         Err(posix88::EINVAL)
     }
 
     /// Read data from this Inode.
-    fn read (&self, _offset: u64, _size: uint) -> Result<&[u8], libc::c_int> {
+    fn read(&mut self, _repo: &git2::Repository, _offset: u64, _size: uint
+           ) -> Result<&[u8], libc::c_int> {
         Err(posix88::EISDIR)
     }
 
     /// Read directory entries from this Inode.
-    fn readdir (&self, _offset: u64, _add: |Id, io::FileType, &PosixPath| -> bool
-               ) -> Result<(), libc::c_int> {
+    fn readdir(&mut self, _repo: &git2::Repository, _offset: u64,
+               _add: |Id, io::FileType, &PosixPath| -> bool
+              ) -> Result<(), libc::c_int> {
         Err(posix88::ENOTDIR)
     }
 }
@@ -110,8 +114,8 @@ impl<'a> InodeContainer<'a> {
         self.inodes.insert(ino, inode)
     }
 
-    pub fn find(&'a mut self, ino: u64) -> Result<&Box<Inode>, libc::c_int> {
-        self.inodes.find(&ino).ok_or(posix88::ENOENT)
+    pub fn find_mut(&'a mut self, ino: u64) -> Result<&mut Box<Inode>, libc::c_int> {
+        self.inodes.find_mut(&ino).ok_or(posix88::ENOENT)
     }
 
     pub fn entry(&'a mut self, ino: u64) -> hashmap::Entry<u64, Box<Inode>> {

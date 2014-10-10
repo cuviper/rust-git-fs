@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-// use git2;
+use git2;
 use libc;
 use libc::consts::os::posix88;
 use std::collections::hashmap;
@@ -31,11 +31,13 @@ impl<'a> RefDir<'a> {
 }
 
 impl<'a> inode::Inode for RefDir<'a> {
-    fn lookup(&self, name: &PosixPath) -> Result<inode::Id, libc::c_int> {
+    fn lookup(&mut self, _repo: &git2::Repository, name: &PosixPath
+              ) -> Result<inode::Id, libc::c_int> {
         self.entries.find_copy(name).ok_or(posix88::ENOENT)
     }
 
-    fn getattr(&self, attr: inode::FileAttr) -> Result<inode::FileAttr, libc::c_int> {
+    fn getattr(&mut self, _repo: &git2::Repository, attr: inode::FileAttr
+               ) -> Result<inode::FileAttr, libc::c_int> {
         let size = self.entries.len() as u64;
         Ok(inode::FileAttr {
             size: size,
@@ -46,8 +48,9 @@ impl<'a> inode::Inode for RefDir<'a> {
         })
     }
 
-    fn readdir (&self, offset: u64, add: |inode::Id, io::FileType, &PosixPath| -> bool
-               ) -> Result<(), libc::c_int> {
+    fn readdir(&mut self, _repo: &git2::Repository, offset: u64,
+               add: |inode::Id, io::FileType, &PosixPath| -> bool
+              ) -> Result<(), libc::c_int> {
         if offset < self.entries.len() as u64 {
             for (path, &id) in self.entries.iter().skip(offset as uint) {
                 if add(id, io::TypeDirectory, path) {

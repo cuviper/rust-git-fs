@@ -28,12 +28,14 @@ impl<'a> Tree<'a> {
 }
 
 impl<'a> inode::Inode for Tree<'a> {
-    fn lookup(&self, name: &PosixPath) -> Result<inode::Id, libc::c_int> {
+    fn lookup(&mut self, _repo: &git2::Repository, name: &PosixPath
+              ) -> Result<inode::Id, libc::c_int> {
         self.tree.get_path(name).map(|e| inode::Oid(e.id()))
             .map_err(|_| posix88::ENOENT)
     }
 
-    fn getattr(&self, attr: inode::FileAttr) -> Result<inode::FileAttr, libc::c_int> {
+    fn getattr(&mut self, _repo: &git2::Repository, attr: inode::FileAttr
+               ) -> Result<inode::FileAttr, libc::c_int> {
         let size = self.tree.len() as u64;
         Ok(inode::FileAttr {
             size: size,
@@ -44,8 +46,9 @@ impl<'a> inode::Inode for Tree<'a> {
         })
     }
 
-    fn readdir (&self, offset: u64, add: |inode::Id, io::FileType, &PosixPath| -> bool
-               ) -> Result<(), libc::c_int> {
+    fn readdir(&mut self, _repo: &git2::Repository, offset: u64,
+               add: |inode::Id, io::FileType, &PosixPath| -> bool
+              ) -> Result<(), libc::c_int> {
         let len = self.tree.len() as u64;
         for i in range(offset, len) {
             let e = match self.tree.get(i as uint) {
