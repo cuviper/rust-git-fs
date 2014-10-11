@@ -2,31 +2,31 @@
 name = "git-fs"
 version = "0.0.1-pre"
 dependencies = [
- "git2 0.0.1 (git+https://github.com/alexcrichton/git2-rs#b83596ed7b811973ea3aa8b115716715982d95f1)",
+ "git2 0.0.1 (git+https://github.com/alexcrichton/git2-rs#c01b0b279470552c48cf7f902ae5baf132df0a6d)",
  "probe 0.1.0 (git+https://github.com/cuviper/rust-libprobe#9f1ca4985517e562c57bf9638c2f0e524f1e32c5)",
- "rust-fuse 0.2.0 (git+https://github.com/cuviper/rust-fuse?ref=rust-nightly#ff977d48f588271e4117fc33bf5e93927f5432d5)",
+ "rust-fuse 0.2.0 (git+https://github.com/cuviper/rust-fuse?ref=rust-nightly#8a220653079a4104c55cfdf9e85114ec7bd55bd0)",
 ]
 
 [[package]]
 name = "encoding"
 version = "0.1.0"
-source = "git+https://github.com/lifthrasiir/rust-encoding#eecc77df36efdfbe87b4a27f2d85a53bef4a8d52"
+source = "git+https://github.com/lifthrasiir/rust-encoding#ff55916fec8b5bf8667a74d5a060c8c951f28fe0"
 
 [[package]]
 name = "git2"
 version = "0.0.1"
-source = "git+https://github.com/alexcrichton/git2-rs#b83596ed7b811973ea3aa8b115716715982d95f1"
+source = "git+https://github.com/alexcrichton/git2-rs#c01b0b279470552c48cf7f902ae5baf132df0a6d"
 dependencies = [
- "libgit2 0.0.1 (git+https://github.com/alexcrichton/git2-rs#b83596ed7b811973ea3aa8b115716715982d95f1)",
+ "libgit2 0.0.1 (git+https://github.com/alexcrichton/git2-rs#c01b0b279470552c48cf7f902ae5baf132df0a6d)",
  "url 0.1.0 (git+https://github.com/servo/rust-url#55b18b796ef2cef5490069dd450c60c2cc2c0c1b)",
 ]
 
 [[package]]
 name = "libgit2"
 version = "0.0.1"
-source = "git+https://github.com/alexcrichton/git2-rs#b83596ed7b811973ea3aa8b115716715982d95f1"
+source = "git+https://github.com/alexcrichton/git2-rs#c01b0b279470552c48cf7f902ae5baf132df0a6d"
 dependencies = [
- "libssh2-static-sys 0.0.1 (git+https://github.com/alexcrichton/libssh2-static-sys#b92d9c4625840394389d626cd6961a2a37c511a6)",
+ "libssh2-static-sys 0.0.1 (git+https://github.com/alexcrichton/libssh2-static-sys#80e71a3021618eb05656c58fb7c5ef5f12bc747f)",
  "link-config 0.0.1 (git+https://github.com/alexcrichton/link-config#0afbf50ba545ac379292b6040330f2903ca891d2)",
  "openssl-static-sys 0.0.1 (git+https://github.com/alexcrichton/openssl-static-sys#b01801397328924055fb1c7c87fd5bf18907e511)",
 ]
@@ -34,7 +34,7 @@ dependencies = [
 [[package]]
 name = "libssh2-static-sys"
 version = "0.0.1"
-source = "git+https://github.com/alexcrichton/libssh2-static-sys#b92d9c4625840394389d626cd6961a2a37c511a6"
+source = "git+https://github.com/alexcrichton/libssh2-static-sys#80e71a3021618eb05656c58fb7c5ef5f12bc747f"
 
 [[package]]
 name = "link-config"
@@ -54,13 +54,13 @@ source = "git+https://github.com/cuviper/rust-libprobe#9f1ca4985517e562c57bf9638
 [[package]]
 name = "rust-fuse"
 version = "0.2.0"
-source = "git+https://github.com/cuviper/rust-fuse?ref=rust-nightly#ff977d48f588271e4117fc33bf5e93927f5432d5"
+source = "git+https://github.com/cuviper/rust-fuse?ref=rust-nightly#8a220653079a4104c55cfdf9e85114ec7bd55bd0"
 
 [[package]]
 name = "url"
 version = "0.1.0"
 source = "git+https://github.com/servo/rust-url#55b18b796ef2cef5490069dd450c60c2cc2c0c1b"
 dependencies = [
- "encoding 0.1.0 (git+https://github.com/lifthrasiir/rust-encoding#eecc77df36efdfbe87b4a27f2d85a53bef4a8d52)",
+ "encoding 0.1.0 (git+https://github.com/lifthrasiir/rust-encoding#ff55916fec8b5bf8667a74d5a060c8c951f28fe0)",
 ]
 
