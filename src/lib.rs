@@ -34,7 +34,7 @@ mod reference;
 mod root;
 
 
-static TTY: time::Timespec = time::Timespec { sec: 1, nsec: 0 };
+const TTY: time::Timespec = time::Timespec { sec: 1, nsec: 0 };
 
 
 /// The main object implementing a FUSE filesystem.
