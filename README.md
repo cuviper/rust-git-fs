@@ -17,7 +17,14 @@ directory within.  Defaults to the current directory.
 
 ## Building
 
-Use `cargo build`.
+Use `cargo build`, which will also handle dependencies on `git2-rs` and
+`rust-fuse`.  The latter will also require `fuse-devel` or `libfuse-dev`
+installed on your system.
+
+## See also
+
+The Git SCM Wiki has a whole page for external tools, including
+[filesystem interfaces](https://git.wiki.kernel.org/index.php/Interfaces,_frontends,_and_tools#Filesystem_interfaces).
 
 ## License
 
