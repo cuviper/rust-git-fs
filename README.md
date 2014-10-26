@@ -21,6 +21,12 @@ Use `cargo build`, which will also handle dependencies on `git2-rs` and
 `rust-fuse`.  The latter will also require `fuse-devel` or `libfuse-dev`
 installed on your system.
 
+Nightly build status is available on Rust CI:
+[![build status][ci-image]][ci-link]
+
+[ci-image]: https://api.travis-ci.org/cuviper/rust-git-fs.png
+[ci-link]: http://www.rust-ci.org/cuviper/rust-git-fs
+
 ## See also
 
 The Git SCM Wiki has a whole page for external tools, including
