@@ -13,10 +13,10 @@ name = "gitfs"
 test = false
 doc = false
 
-[dependencies.rust-fuse]
-#git = "https://github.com/zargony/rust-fuse"
-git = "https://github.com/cuviper/rust-fuse"
-branch = "rust-nightly"
+[dependencies.fuse]
+git = "https://github.com/zargony/rust-fuse"
+#git = "https://github.com/cuviper/rust-fuse"
+#branch = "rust-nightly"
 
 [dependencies.git2]
 git = "https://github.com/alexcrichton/git2-rs"
