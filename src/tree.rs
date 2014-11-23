@@ -12,6 +12,7 @@ use libc::consts::os::posix88;
 use std::io;
 
 use inode;
+use inode::{FileAttr, Id, Inode};
 
 /// Git trees are represented as directories
 // FIXME needs context, e.g. permissions from TreeEntry and timestamps from Commit
@@ -20,24 +21,24 @@ pub struct Tree<'a> {
 }
 
 impl<'a> Tree<'a> {
-    pub fn new(tree: git2::Tree<'a>) -> Box<inode::Inode> {
+    pub fn new(tree: git2::Tree<'a>) -> Box<Inode> {
         box Tree {
             tree: tree,
         }
     }
 }
 
-impl<'a> inode::Inode for Tree<'a> {
+impl<'a> Inode for Tree<'a> {
     fn lookup(&mut self, _repo: &git2::Repository, name: &PosixPath
-              ) -> Result<inode::Id, libc::c_int> {
-        self.tree.get_path(name).map(|e| inode::Oid(e.id()))
+              ) -> Result<Id, libc::c_int> {
+        self.tree.get_path(name).map(|e| Id::Oid(e.id()))
             .map_err(|_| posix88::ENOENT)
     }
 
-    fn getattr(&mut self, _repo: &git2::Repository, attr: inode::FileAttr
-               ) -> Result<inode::FileAttr, libc::c_int> {
+    fn getattr(&mut self, _repo: &git2::Repository, attr: FileAttr
+               ) -> Result<FileAttr, libc::c_int> {
         let size = self.tree.len() as u64;
-        Ok(inode::FileAttr {
+        Ok(FileAttr {
             size: size,
             blocks: inode::st_blocks(size),
             kind: io::TypeDirectory,
@@ -47,7 +48,7 @@ impl<'a> inode::Inode for Tree<'a> {
     }
 
     fn readdir(&mut self, _repo: &git2::Repository, offset: u64,
-               add: |inode::Id, io::FileType, &PosixPath| -> bool
+               add: |Id, io::FileType, &PosixPath| -> bool
               ) -> Result<(), libc::c_int> {
         let len = self.tree.len() as u64;
         for i in range(offset, len) {
@@ -56,12 +57,12 @@ impl<'a> inode::Inode for Tree<'a> {
                 None => continue,
             };
             let kind = match e.kind() {
-                Some(git2::ObjectTree) => io::TypeDirectory,
-                Some(git2::ObjectBlob) => io::TypeFile,
+                Some(git2::ObjectType::Tree) => io::TypeDirectory,
+                Some(git2::ObjectType::Blob) => io::TypeFile,
                 _ => io::TypeUnknown,
             };
             let path = PosixPath::new(e.name_bytes());
-            if add(inode::Oid(e.id()), kind, &path) {
+            if add(Id::Oid(e.id()), kind, &path) {
                 break;
             }
         }

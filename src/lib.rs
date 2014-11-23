@@ -8,7 +8,7 @@
 
 //! # GitFS: a FUSE filesystem for Git objects
 
-#![deny(missing_doc)]
+#![deny(missing_docs)]
 
 #![feature(if_let)]
 
@@ -21,11 +21,12 @@ extern crate git2;
 extern crate libc;
 extern crate time;
 
-use std::collections::hashmap;
+use std::collections::hash_map;
 use std::default::Default;
 use std::io;
 use std::u64;
 
+use inode::{Id, InodeContainer, InodeMapper};
 
 mod inode;
 mod blob;
@@ -38,19 +39,19 @@ const TTY: time::Timespec = time::Timespec { sec: 1, nsec: 0 };
 
 
 /// The main object implementing a FUSE filesystem.
-pub struct GitFS<'a> {
+pub struct GitFS {
     repo: git2::Repository,
     epoch: time::Timespec,
     uid: u32,
     gid: u32,
-    mapper: inode::InodeMapper,
-    inodes: inode::InodeContainer<'a>,
+    mapper: InodeMapper,
+    inodes: InodeContainer<'static>,
     mountdir: Option<DirHandle>,
 }
 
-impl<'a> GitFS<'a> {
+impl GitFS {
     /// Create a GitFS referencing the given GIT_DIR.
-    pub fn new(git_dir: &Path) -> Result<GitFS<'a>, git2::Error> {
+    pub fn new(git_dir: &Path) -> Result<GitFS, git2::Error> {
         Ok(GitFS {
             repo: try!(git2::Repository::open(git_dir)),
             epoch: time::get_time(),
@@ -113,13 +114,13 @@ impl<'a> GitFS<'a> {
     }
 }
 
-impl<'a> fuse::Filesystem for GitFS<'a> {
+impl fuse::Filesystem for GitFS {
     fn init (&mut self, _req: &fuse::Request) -> Result<(), libc::c_int> {
         let root_ino = self.mapper.new_ino();
         let refs_ino = self.mapper.new_ino();
         assert_eq!(fuse::FUSE_ROOT_ID, root_ino);
 
-        let root = root::Root::new(&self.repo, inode::Ino(refs_ino));
+        let root = root::Root::new(&self.repo, Id::Ino(refs_ino));
         self.inodes.insert(root_ino, root);
 
         let refs = reference::RefDir::new();
@@ -142,7 +143,7 @@ impl<'a> fuse::Filesystem for GitFS<'a> {
         };
         let ino = self.mapper.get_ino(id);
 
-        if let hashmap::Vacant(entry) = self.inodes.entry(ino) {
+        if let hash_map::Vacant(entry) = self.inodes.entry(ino) {
             if let Some(oid) = self.mapper.get_oid(ino) {
                 if let Some(inode) = inode::new_inode(&self.repo, oid) {
                     entry.set(inode);

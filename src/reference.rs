@@ -9,7 +9,7 @@
 use git2;
 use libc;
 use libc::consts::os::posix88;
-use std::collections::hashmap;
+use std::collections::hash_map;
 use std::default::Default;
 use std::io;
 
@@ -18,22 +18,22 @@ use inode;
 
 /// Represents a virtual directory in reference paths
 /// (e.g. `refs/heads/master` needs intermediate `refs/` and `refs/heads/`)
-pub struct RefDir<'a> {
-    entries: hashmap::HashMap<PosixPath, inode::Id>,
+pub struct RefDir {
+    entries: hash_map::HashMap<PosixPath, inode::Id>,
 }
 
-impl<'a> RefDir<'a> {
-    pub fn new() -> Box<inode::Inode+'a> {
+impl RefDir {
+    pub fn new() -> Box<inode::Inode+'static> {
         box RefDir {
             entries: Default::default(),
         }
     }
 }
 
-impl<'a> inode::Inode for RefDir<'a> {
+impl inode::Inode for RefDir {
     fn lookup(&mut self, _repo: &git2::Repository, name: &PosixPath
               ) -> Result<inode::Id, libc::c_int> {
-        self.entries.find_copy(name).ok_or(posix88::ENOENT)
+        self.entries.get(name).cloned().ok_or(posix88::ENOENT)
     }
 
     fn getattr(&mut self, _repo: &git2::Repository, attr: inode::FileAttr

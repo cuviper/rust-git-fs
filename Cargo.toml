@@ -14,9 +14,9 @@ test = false
 doc = false
 
 [dependencies.fuse]
-git = "https://github.com/zargony/rust-fuse"
-#git = "https://github.com/cuviper/rust-fuse"
-#branch = "rust-nightly"
+#git = "https://github.com/zargony/rust-fuse"
+git = "https://github.com/cuviper/rust-fuse"
+branch = "rust-nightly"
 
 [dependencies.git2]
 git = "https://github.com/alexcrichton/git2-rs"

@@ -35,6 +35,6 @@ fn main() {
 
             fs.mount(&target);
         },
-        Err(e) => fail!("{}", e),
+        Err(e) => panic!("{}", e),
     };
 }

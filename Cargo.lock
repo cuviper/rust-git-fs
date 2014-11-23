@@ -2,54 +2,79 @@
 name = "git-fs"
 version = "0.0.1-pre"
 dependencies = [
- "fuse 0.2.0 (git+https://github.com/zargony/rust-fuse#a87ca2a63666bd216743e1a73f29ae26477041e0)",
- "git2 0.0.1 (git+https://github.com/alexcrichton/git2-rs#35a0632e92d63de8218675a17cd81e15d0de44b4)",
- "probe 0.1.0 (git+https://github.com/cuviper/rust-libprobe#9f1ca4985517e562c57bf9638c2f0e524f1e32c5)",
+ "fuse 0.2.0 (git+https://github.com/cuviper/rust-fuse?ref=rust-nightly)",
+ "git2 0.0.1 (git+https://github.com/alexcrichton/git2-rs)",
+ "probe 0.1.0 (git+https://github.com/cuviper/rust-libprobe)",
 ]
-
-[[package]]
-name = "encoding"
-version = "0.1.0"
-source = "git+https://github.com/lifthrasiir/rust-encoding#a739425a3f3174a31fe38c158dcaf22ea1d856f4"
 
 [[package]]
 name = "fuse"
 version = "0.2.0"
-source = "git+https://github.com/zargony/rust-fuse#a87ca2a63666bd216743e1a73f29ae26477041e0"
+source = "git+https://github.com/cuviper/rust-fuse?ref=rust-nightly#63aa5d59dd1dc403c54c293ee4ab8495b1e7a99e"
+dependencies = [
+ "time 0.0.3 (git+http://github.com/rust-lang/time)",
+]
+
+[[package]]
+name = "gcc"
+version = "0.0.2"
+source = "git+https://github.com/alexcrichton/gcc-rs#903e8f8a2e3766ad3d514404d452dbaa1d3b2d79"
 
 [[package]]
 name = "git2"
 version = "0.0.1"
-source = "git+https://github.com/alexcrichton/git2-rs#35a0632e92d63de8218675a17cd81e15d0de44b4"
+source = "git+https://github.com/alexcrichton/git2-rs#d0d21ca14b4a410806b577b04c2d29f7f8e45f61"
 dependencies = [
- "libgit2 0.0.1 (git+https://github.com/alexcrichton/git2-rs#35a0632e92d63de8218675a17cd81e15d0de44b4)",
- "url 0.1.0 (git+https://github.com/servo/rust-url#9142b86a812ac5bc886f76235585557d8e002246)",
+ "libgit2-sys 0.0.1 (git+https://github.com/alexcrichton/git2-rs)",
+ "time 0.0.3 (git+http://github.com/rust-lang/time)",
+ "url 0.1.0 (git+https://github.com/servo/rust-url)",
 ]
 
 [[package]]
-name = "libgit2"
+name = "libgit2-sys"
 version = "0.0.1"
-source = "git+https://github.com/alexcrichton/git2-rs#35a0632e92d63de8218675a17cd81e15d0de44b4"
+source = "git+https://github.com/alexcrichton/git2-rs#d0d21ca14b4a410806b577b04c2d29f7f8e45f61"
 dependencies = [
- "libssh2-static-sys 0.0.1 (git+https://github.com/alexcrichton/libssh2-static-sys#80e71a3021618eb05656c58fb7c5ef5f12bc747f)",
- "link-config 0.0.1 (git+https://github.com/alexcrichton/link-config#7c56ef12c8a49bedb0357e2a50af9ba79bf0ae1b)",
- "openssl-static-sys 0.0.1 (git+https://github.com/alexcrichton/openssl-static-sys#2e1c50a7f35ef52ce38dbd405a175b6dccc0ebad)",
+ "libssh2-sys 0.0.1 (git+https://github.com/alexcrichton/ssh2-rs)",
+ "openssl-sys 0.0.2 (git+https://github.com/sfackler/rust-openssl)",
+ "pkg-config 0.0.1 (git+https://github.com/alexcrichton/pkg-config-rs)",
 ]
 
 [[package]]
-name = "libssh2-static-sys"
+name = "libssh2-sys"
 version = "0.0.1"
-source = "git+https://github.com/alexcrichton/libssh2-static-sys#80e71a3021618eb05656c58fb7c5ef5f12bc747f"
+source = "git+https://github.com/alexcrichton/ssh2-rs#922531da4c22abe7a216672314315d41769d7fb1"
+dependencies = [
+ "libz-sys 0.0.1 (git+https://github.com/alexcrichton/libz-sys)",
+ "openssl-sys 0.0.2 (git+https://github.com/sfackler/rust-openssl)",
+ "pkg-config 0.0.1 (git+https://github.com/alexcrichton/pkg-config-rs)",
+]
 
 [[package]]
-name = "link-config"
+name = "libz-sys"
 version = "0.0.1"
-source = "git+https://github.com/alexcrichton/link-config#7c56ef12c8a49bedb0357e2a50af9ba79bf0ae1b"
+source = "git+https://github.com/alexcrichton/libz-sys#37926b786b09e013e5fd64cc278b3df1b49c4fbe"
+dependencies = [
+ "pkg-config 0.0.1 (git+https://github.com/alexcrichton/pkg-config-rs)",
+]
 
 [[package]]
-name = "openssl-static-sys"
+name = "openssl-sys"
+version = "0.0.2"
+source = "git+https://github.com/sfackler/rust-openssl#b7c88101f5afd764f1bab5b1a4b8d0c95bc17a52"
+dependencies = [
+ "pkg-config 0.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "pkg-config"
 version = "0.0.1"
-source = "git+https://github.com/alexcrichton/openssl-static-sys#2e1c50a7f35ef52ce38dbd405a175b6dccc0ebad"
+source = "git+https://github.com/alexcrichton/pkg-config-rs#d24a08d87d63df8dc9526c503944415b86719220"
+
+[[package]]
+name = "pkg-config"
+version = "0.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "probe"
@@ -57,10 +82,15 @@ version = "0.1.0"
 source = "git+https://github.com/cuviper/rust-libprobe#9f1ca4985517e562c57bf9638c2f0e524f1e32c5"
 
 [[package]]
+name = "time"
+version = "0.0.3"
+source = "git+http://github.com/rust-lang/time#533d3823dbe200aaa2a2599176a6b30579581232"
+dependencies = [
+ "gcc 0.0.2 (git+https://github.com/alexcrichton/gcc-rs)",
+]
+
+[[package]]
 name = "url"
 version = "0.1.0"
-source = "git+https://github.com/servo/rust-url#9142b86a812ac5bc886f76235585557d8e002246"
-dependencies = [
- "encoding 0.1.0 (git+https://github.com/lifthrasiir/rust-encoding#a739425a3f3174a31fe38c158dcaf22ea1d856f4)",
-]
+source = "git+https://github.com/servo/rust-url#a838a41263472de966f7ec8db758caa9cc4699a4"
 

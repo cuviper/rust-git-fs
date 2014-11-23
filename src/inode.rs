@@ -9,9 +9,8 @@
 use git2;
 use libc;
 use libc::consts::os::posix88;
-use std::collections::hashmap;
+use std::collections::hash_map;
 use std::io;
-use std::num;
 
 use blob;
 use tree;
@@ -75,8 +74,8 @@ pub trait Inode {
 #[deriving(Default)]
 pub struct InodeMapper {
     max_ino: u64,
-    oids: hashmap::HashMap<git2::Oid, u64>,
-    inos: hashmap::HashMap<u64, git2::Oid>,
+    oids: hash_map::HashMap<git2::Oid, u64>,
+    inos: hash_map::HashMap<u64, git2::Oid>,
 }
 
 impl InodeMapper {
@@ -88,17 +87,17 @@ impl InodeMapper {
 
     /// Get the oid associated with this ino
     pub fn get_oid(&self, ino: u64) -> Option<git2::Oid> {
-        self.inos.find_copy(&ino)
+        self.inos.get(&ino).cloned()
     }
 
     /// Map any Id to an inode number
     pub fn get_ino(&mut self, id: Id) -> u64 {
         match id {
-            Ino(ino) => ino,
-            Oid(oid) => {
+            Id::Ino(ino) => ino,
+            Id::Oid(oid) => {
                 match self.oids.entry(oid) {
-                    hashmap::Occupied(entry) => *entry.get(),
-                    hashmap::Vacant(entry) => {
+                    hash_map::Occupied(entry) => *entry.get(),
+                    hash_map::Vacant(entry) => {
                         // NB can't call new_ino because entry holds mut
                         self.max_ino += 1;
                         let ino = self.max_ino;
@@ -116,19 +115,19 @@ impl InodeMapper {
 /// in the GitFS at the same time.
 #[deriving(Default)]
 pub struct InodeContainer<'a> {
-    inodes: hashmap::HashMap<u64, Box<Inode+'a>>,
+    inodes: hash_map::HashMap<u64, Box<Inode+'a>>,
 }
 
 impl<'a> InodeContainer<'a> {
-    pub fn insert(&mut self, ino: u64, inode: Box<Inode+'a>) -> bool {
+    pub fn insert(&mut self, ino: u64, inode: Box<Inode+'a>) -> Option<Box<Inode+'a>> {
         self.inodes.insert(ino, inode)
     }
 
     pub fn find_mut(&'a mut self, ino: u64) -> Result<&mut Box<Inode>, libc::c_int> {
-        self.inodes.find_mut(&ino).ok_or(posix88::ENOENT)
+        self.inodes.get_mut(&ino).ok_or(posix88::ENOENT)
     }
 
-    pub fn entry(&'a mut self, ino: u64) -> hashmap::Entry<u64, Box<Inode>> {
+    pub fn entry(&'a mut self, ino: u64) -> hash_map::Entry<u64, Box<Inode>> {
         self.inodes.entry(ino)
     }
 }
@@ -138,13 +137,13 @@ impl<'a> InodeContainer<'a> {
 // FIXME see the note on Id about 1:1 mapping trouble
 pub fn new_inode(repo: &git2::Repository, oid: git2::Oid) -> Option<Box<Inode>> {
     match repo.find_object(oid, None).ok().and_then(|o| o.kind()) {
-        Some(git2::ObjectBlob) => {
+        Some(git2::ObjectType::Blob) => {
             repo.find_blob(oid).ok().map(|blob| blob::Blob::new(blob))
         },
-        Some(git2::ObjectTree) => {
+        Some(git2::ObjectType::Tree) => {
             repo.find_tree(oid).ok().map(|tree| tree::Tree::new(tree))
         },
-        Some(git2::ObjectCommit) => {
+        Some(git2::ObjectType::Commit) => {
             // FIXME a first-class Commit might expose things like the message as xattrs,
             // but for now just redirect straight to the tree id.
             repo.find_commit(oid).ok()
@@ -158,6 +157,5 @@ pub fn new_inode(repo: &git2::Repository, oid: git2::Oid) -> Option<Box<Inode>> 
 /// Compute the number of blocks needed to contain a given size.
 pub fn st_blocks(size: u64) -> u64 {
     // NB FUSE apparently always uses 512-byte blocks.  Round up.
-    let (blocks, extra) = num::div_rem(size, 512);
-    blocks + if extra > 0 { 1 } else { 0 }
+    (size + 511) / 512
 }
