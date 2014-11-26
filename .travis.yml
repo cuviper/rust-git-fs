@@ -5,3 +5,5 @@ install:
   - sudo apt-get install libfuse-dev
 script:
   - cargo build --verbose
+notifications:
+  on_success: never
