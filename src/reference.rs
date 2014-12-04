@@ -42,7 +42,7 @@ impl inode::Inode for RefDir {
         Ok(inode::FileAttr {
             size: size,
             blocks: inode::st_blocks(size),
-            kind: io::TypeDirectory,
+            kind: io::FileType::Directory,
             perm: io::USER_DIR,
             ..attr
         })
@@ -53,7 +53,7 @@ impl inode::Inode for RefDir {
               ) -> Result<(), libc::c_int> {
         if offset < self.entries.len() as u64 {
             for (path, &id) in self.entries.iter().skip(offset as uint) {
-                if add(id, io::TypeDirectory, path) {
+                if add(id, io::FileType::Directory, path) {
                     break;
                 }
             }

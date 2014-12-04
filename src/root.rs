@@ -49,7 +49,7 @@ impl<'a> Inode for Root<'a> {
         Ok(FileAttr {
             size: size,
             blocks: inode::st_blocks(size),
-            kind: io::TypeDirectory,
+            kind: io::FileType::Directory,
             perm: io::USER_DIR,
             ..attr
         })
@@ -59,12 +59,12 @@ impl<'a> Inode for Root<'a> {
                add: |Id, io::FileType, &PosixPath| -> bool
               ) -> Result<(), libc::c_int> {
         if offset == 0 {
-            add(self.refs, io::TypeUnknown, &PosixPath::new("refs"));
+            add(self.refs, io::FileType::Unknown, &PosixPath::new("refs"));
         }
         if offset <= 1 {
             match self.head.as_ref().and_then(|head| head.target()) {
                 Some(oid) => {
-                    add(Id::Oid(oid), io::TypeUnknown, &PosixPath::new("HEAD"));
+                    add(Id::Oid(oid), io::FileType::Unknown, &PosixPath::new("HEAD"));
                 },
                 None => (),
             }

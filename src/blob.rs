@@ -38,7 +38,7 @@ impl inode::Inode for Blob {
         Ok(inode::FileAttr {
             size: self.size,
             blocks: inode::st_blocks(self.size),
-            kind: io::TypeFile,
+            kind: io::FileType::RegularFile,
             perm: io::USER_FILE,
             ..attr
         })

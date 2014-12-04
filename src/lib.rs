@@ -103,7 +103,7 @@ impl GitFS {
             mtime: self.epoch,
             ctime: self.epoch,
             crtime: self.epoch,
-            kind: io::TypeUnknown,
+            kind: io::FileType::Unknown,
             perm: Default::default(),
             nlink: 1,
             uid: self.uid,
@@ -222,11 +222,11 @@ impl fuse::Filesystem for GitFS {
         match inode.and_then(|inode| {
             if offset == 0 {
                 offset += 1;
-                reply.add(u64::MAX, offset, io::TypeDirectory, &PosixPath::new("."));
+                reply.add(u64::MAX, offset, io::FileType::Directory, &PosixPath::new("."));
             }
             if offset == 1 {
                 offset += 1;
-                reply.add(u64::MAX, offset, io::TypeDirectory, &PosixPath::new(".."));
+                reply.add(u64::MAX, offset, io::FileType::Directory, &PosixPath::new(".."));
             }
             inode.readdir(repo, offset - 2, |id, kind, path| {
                 offset += 1;

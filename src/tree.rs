@@ -41,7 +41,7 @@ impl<'a> Inode for Tree<'a> {
         Ok(FileAttr {
             size: size,
             blocks: inode::st_blocks(size),
-            kind: io::TypeDirectory,
+            kind: io::FileType::Directory,
             perm: io::USER_DIR,
             ..attr
         })
@@ -57,9 +57,9 @@ impl<'a> Inode for Tree<'a> {
                 None => continue,
             };
             let kind = match e.kind() {
-                Some(git2::ObjectType::Tree) => io::TypeDirectory,
-                Some(git2::ObjectType::Blob) => io::TypeFile,
-                _ => io::TypeUnknown,
+                Some(git2::ObjectType::Tree) => io::FileType::Directory,
+                Some(git2::ObjectType::Blob) => io::FileType::RegularFile,
+                _ => io::FileType::Unknown,
             };
             let path = PosixPath::new(e.name_bytes());
             if add(Id::Oid(e.id()), kind, &path) {
