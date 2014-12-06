@@ -10,8 +10,6 @@
 
 #![deny(missing_docs)]
 
-#![feature(if_let)]
-
 #![feature(phase)]
 #[phase(plugin)]
 extern crate probe;
