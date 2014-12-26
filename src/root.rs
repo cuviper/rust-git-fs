@@ -15,25 +15,25 @@ use inode;
 use inode::{FileAttr, Id, Inode};
 
 /// The root of the filesystem, currently just revealing HEAD and refs/
-pub struct Root<'a> {
-    head: Option<git2::Reference<'a>>,
+pub struct Root {
+    head: Id,
     refs: Id,
 }
 
-impl<'a> Root<'a> {
-    pub fn new(repo: &git2::Repository, refs: Id) -> Box<Inode> {
+impl Root {
+    pub fn new(head: Id, refs: Id) -> Box<Inode+'static> {
         box Root {
-            head: repo.head().ok(),
+            head: head,
             refs: refs,
         }
     }
 }
 
-impl<'a> Inode for Root<'a> {
-    fn lookup(&mut self, _repo: &git2::Repository, name: &PosixPath
+impl Inode for Root {
+    fn lookup(&mut self, repo: &git2::Repository, name: &PosixPath
              ) -> Result<Id, libc::c_int> {
         if name.as_vec() == b"HEAD" {
-            self.head.as_ref()
+            repo.head().ok()
                 .and_then(|head| head.target())
                 .map(|oid| Id::Oid(oid))
         }
@@ -45,7 +45,7 @@ impl<'a> Inode for Root<'a> {
 
     fn getattr(&mut self, _repo: &git2::Repository, attr: FileAttr
               ) -> Result<FileAttr, libc::c_int> {
-        let size = 1; // just HEAD
+        let size = 2; // just HEAD and refs/
         Ok(FileAttr {
             size: size,
             blocks: inode::st_blocks(size),
@@ -59,15 +59,10 @@ impl<'a> Inode for Root<'a> {
                add: |Id, io::FileType, &PosixPath| -> bool
               ) -> Result<(), libc::c_int> {
         if offset == 0 {
-            add(self.refs, io::FileType::Unknown, &PosixPath::new("refs"));
+            add(self.head, io::FileType::Unknown, &PosixPath::new("HEAD"));
         }
         if offset <= 1 {
-            match self.head.as_ref().and_then(|head| head.target()) {
-                Some(oid) => {
-                    add(Id::Oid(oid), io::FileType::Unknown, &PosixPath::new("HEAD"));
-                },
-                None => (),
-            }
+            add(self.refs, io::FileType::Unknown, &PosixPath::new("refs"));
         }
         Ok(())
     }

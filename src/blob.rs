@@ -23,7 +23,7 @@ pub struct Blob {
 }
 
 impl Blob {
-    pub fn new(blob: git2::Blob) -> Box<inode::Inode> {
+    pub fn new(blob: git2::Blob) -> Box<inode::Inode+'static> {
         box Blob {
             oid: blob.id(),
             size: blob.content().len() as u64,

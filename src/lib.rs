@@ -43,7 +43,7 @@ pub struct GitFS {
     uid: u32,
     gid: u32,
     mapper: InodeMapper,
-    inodes: InodeContainer<'static>,
+    inodes: InodeContainer,
     mountdir: Option<DirHandle>,
 }
 
@@ -115,10 +115,11 @@ impl GitFS {
 impl fuse::Filesystem for GitFS {
     fn init (&mut self, _req: &fuse::Request) -> Result<(), libc::c_int> {
         let root_ino = self.mapper.new_ino();
+        let head_ino = self.mapper.new_ino();
         let refs_ino = self.mapper.new_ino();
         assert_eq!(fuse::FUSE_ROOT_ID, root_ino);
 
-        let root = root::Root::new(&self.repo, Id::Ino(refs_ino));
+        let root = root::Root::new(Id::Ino(head_ino), Id::Ino(refs_ino));
         self.inodes.insert(root_ino, root);
 
         let refs = reference::RefDir::new();
@@ -141,7 +142,7 @@ impl fuse::Filesystem for GitFS {
         };
         let ino = self.mapper.get_ino(id);
 
-        if let hash_map::Vacant(entry) = self.inodes.entry(ino) {
+        if let hash_map::Entry::Vacant(entry) = self.inodes.entry(ino) {
             if let Some(oid) = self.mapper.get_oid(ino) {
                 if let Some(inode) = inode::new_inode(&self.repo, oid) {
                     entry.set(inode);

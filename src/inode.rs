@@ -23,7 +23,7 @@ pub use fuse::FileAttr;
 // instance, Blobs and Trees have no concept of their own timestamps or permissions.  But a Tree
 // does know its children's permissions in TreeEntry, and a Commit could propagate timestamps
 // recursively down its Tree.  This will require Oids to be context sensitive, with 1:N inos.
-#[deriving(Clone)]
+#[deriving(Clone,Copy)]
 pub enum Id {
     Ino(u64),
     Oid(git2::Oid),
@@ -96,8 +96,8 @@ impl InodeMapper {
             Id::Ino(ino) => ino,
             Id::Oid(oid) => {
                 match self.oids.entry(oid) {
-                    hash_map::Occupied(entry) => *entry.get(),
-                    hash_map::Vacant(entry) => {
+                    hash_map::Entry::Occupied(entry) => *entry.get(),
+                    hash_map::Entry::Vacant(entry) => {
                         // NB can't call new_ino because entry holds mut
                         self.max_ino += 1;
                         let ino = self.max_ino;
@@ -114,20 +114,20 @@ impl InodeMapper {
 /// A separate container allows mut borrowing without blocking everything else
 /// in the GitFS at the same time.
 #[deriving(Default)]
-pub struct InodeContainer<'a> {
-    inodes: hash_map::HashMap<u64, Box<Inode+'a>>,
+pub struct InodeContainer {
+    inodes: hash_map::HashMap<u64, Box<Inode+'static>>,
 }
 
-impl<'a> InodeContainer<'a> {
-    pub fn insert(&mut self, ino: u64, inode: Box<Inode+'a>) -> Option<Box<Inode+'a>> {
+impl InodeContainer {
+    pub fn insert(&mut self, ino: u64, inode: Box<Inode+'static>) -> Option<Box<Inode+'static>> {
         self.inodes.insert(ino, inode)
     }
 
-    pub fn find_mut(&'a mut self, ino: u64) -> Result<&mut Box<Inode>, libc::c_int> {
+    pub fn find_mut(&mut self, ino: u64) -> Result<&mut Box<Inode+'static>, libc::c_int> {
         self.inodes.get_mut(&ino).ok_or(posix88::ENOENT)
     }
 
-    pub fn entry(&'a mut self, ino: u64) -> hash_map::Entry<u64, Box<Inode>> {
+    pub fn entry(&mut self, ino: u64) -> hash_map::Entry<u64, Box<Inode+'static>> {
         self.inodes.entry(ino)
     }
 }
@@ -135,7 +135,7 @@ impl<'a> InodeContainer<'a> {
 
 /// Creates an Inode from any Oid.
 // FIXME see the note on Id about 1:1 mapping trouble
-pub fn new_inode(repo: &git2::Repository, oid: git2::Oid) -> Option<Box<Inode>> {
+pub fn new_inode(repo: &git2::Repository, oid: git2::Oid) -> Option<Box<Inode+'static>> {
     match repo.find_object(oid, None).ok().and_then(|o| o.kind()) {
         Some(git2::ObjectType::Blob) => {
             repo.find_blob(oid).ok().map(|blob| blob::Blob::new(blob))
