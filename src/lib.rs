@@ -19,6 +19,7 @@ extern crate git2;
 extern crate libc;
 extern crate time;
 
+use std::c_str::ToCStr;
 use std::collections::hash_map;
 use std::default::Default;
 use std::io;
@@ -128,7 +129,7 @@ impl fuse::Filesystem for GitFS {
         Ok(())
     }
 
-    fn lookup(&mut self, _req: &fuse::Request, parent: u64, name: &PosixPath,
+    fn lookup(&mut self, _req: &fuse::Request, parent: u64, name: &Path,
               reply: fuse::ReplyEntry) {
         probe!(gitfs, lookup, parent, name.to_c_str().as_ptr());
 
@@ -221,11 +222,11 @@ impl fuse::Filesystem for GitFS {
         match inode.and_then(|inode| {
             if offset == 0 {
                 offset += 1;
-                reply.add(u64::MAX, offset, io::FileType::Directory, &PosixPath::new("."));
+                reply.add(u64::MAX, offset, io::FileType::Directory, &Path::new("."));
             }
             if offset == 1 {
                 offset += 1;
-                reply.add(u64::MAX, offset, io::FileType::Directory, &PosixPath::new(".."));
+                reply.add(u64::MAX, offset, io::FileType::Directory, &Path::new(".."));
             }
             inode.readdir(repo, offset - 2, |id, kind, path| {
                 offset += 1;

@@ -30,7 +30,7 @@ impl Root {
 }
 
 impl Inode for Root {
-    fn lookup(&mut self, repo: &git2::Repository, name: &PosixPath
+    fn lookup(&mut self, repo: &git2::Repository, name: &Path
              ) -> Result<Id, libc::c_int> {
         if name.as_vec() == b"HEAD" {
             repo.head().ok()
@@ -56,13 +56,13 @@ impl Inode for Root {
     }
 
     fn readdir(&mut self, _repo: &git2::Repository, offset: u64,
-               add: |Id, io::FileType, &PosixPath| -> bool
+               add: |Id, io::FileType, &Path| -> bool
               ) -> Result<(), libc::c_int> {
         if offset == 0 {
-            add(self.head, io::FileType::Unknown, &PosixPath::new("HEAD"));
+            add(self.head, io::FileType::Unknown, &Path::new("HEAD"));
         }
         if offset <= 1 {
-            add(self.refs, io::FileType::Unknown, &PosixPath::new("refs"));
+            add(self.refs, io::FileType::Unknown, &Path::new("refs"));
         }
         Ok(())
     }

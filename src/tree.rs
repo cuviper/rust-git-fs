@@ -35,7 +35,7 @@ impl Tree {
 }
 
 impl Inode for Tree {
-    fn lookup(&mut self, repo: &git2::Repository, name: &PosixPath
+    fn lookup(&mut self, repo: &git2::Repository, name: &Path
               ) -> Result<Id, libc::c_int> {
         self.tree(repo).and_then(|tree| {
             match tree.get_path(name) {
@@ -57,7 +57,7 @@ impl Inode for Tree {
     }
 
     fn readdir(&mut self, repo: &git2::Repository, offset: u64,
-               add: |Id, io::FileType, &PosixPath| -> bool
+               add: |Id, io::FileType, &Path| -> bool
               ) -> Result<(), libc::c_int> {
         let len = self.size;
         self.tree(repo).map(|tree| {
@@ -71,7 +71,7 @@ impl Inode for Tree {
                     Some(git2::ObjectType::Blob) => io::FileType::RegularFile,
                     _ => io::FileType::Unknown,
                 };
-                let path = PosixPath::new(e.name_bytes());
+                let path = Path::new(e.name_bytes());
                 if add(Id::Oid(e.id()), kind, &path) {
                     break;
                 }

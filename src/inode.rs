@@ -23,7 +23,7 @@ pub use fuse::FileAttr;
 // instance, Blobs and Trees have no concept of their own timestamps or permissions.  But a Tree
 // does know its children's permissions in TreeEntry, and a Commit could propagate timestamps
 // recursively down its Tree.  This will require Oids to be context sensitive, with 1:N inos.
-#[deriving(Clone,Copy)]
+#[derive(Clone,Copy)]
 pub enum Id {
     Ino(u64),
     Oid(git2::Oid),
@@ -33,7 +33,7 @@ pub enum Id {
 /// A generic interface for different Git object types to implement.
 pub trait Inode {
     /// Find a directory entry in this Inode by name.
-    fn lookup(&mut self, _repo: &git2::Repository, _name: &PosixPath
+    fn lookup(&mut self, _repo: &git2::Repository, _name: &Path
              ) -> Result<Id, libc::c_int> {
         Err(posix88::ENOTDIR)
     }
@@ -62,7 +62,7 @@ pub trait Inode {
 
     /// Read directory entries from this Inode.
     fn readdir(&mut self, _repo: &git2::Repository, _offset: u64,
-               _add: |Id, io::FileType, &PosixPath| -> bool
+               _add: |Id, io::FileType, &Path| -> bool
               ) -> Result<(), libc::c_int> {
         Err(posix88::ENOTDIR)
     }
@@ -71,7 +71,7 @@ pub trait Inode {
 
 /// Assign new inode numbers, and map Oids to ino dynamically
 // FIXME see the note on Id about 1:1 mapping trouble
-#[deriving(Default)]
+#[derive(Default)]
 pub struct InodeMapper {
     max_ino: u64,
     oids: hash_map::HashMap<git2::Oid, u64>,
@@ -113,7 +113,7 @@ impl InodeMapper {
 
 /// A separate container allows mut borrowing without blocking everything else
 /// in the GitFS at the same time.
-#[deriving(Default)]
+#[derive(Default)]
 pub struct InodeContainer {
     inodes: hash_map::HashMap<u64, Box<Inode+'static>>,
 }

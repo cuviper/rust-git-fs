@@ -19,7 +19,7 @@ use inode;
 /// Represents a virtual directory in reference paths
 /// (e.g. `refs/heads/master` needs intermediate `refs/` and `refs/heads/`)
 pub struct RefDir {
-    entries: hash_map::HashMap<PosixPath, inode::Id>,
+    entries: hash_map::HashMap<Path, inode::Id>,
 }
 
 impl RefDir {
@@ -31,7 +31,7 @@ impl RefDir {
 }
 
 impl inode::Inode for RefDir {
-    fn lookup(&mut self, _repo: &git2::Repository, name: &PosixPath
+    fn lookup(&mut self, _repo: &git2::Repository, name: &Path
               ) -> Result<inode::Id, libc::c_int> {
         self.entries.get(name).cloned().ok_or(posix88::ENOENT)
     }
@@ -49,7 +49,7 @@ impl inode::Inode for RefDir {
     }
 
     fn readdir(&mut self, _repo: &git2::Repository, offset: u64,
-               add: |inode::Id, io::FileType, &PosixPath| -> bool
+               add: |inode::Id, io::FileType, &Path| -> bool
               ) -> Result<(), libc::c_int> {
         if offset < self.entries.len() as u64 {
             for (path, &id) in self.entries.iter().skip(offset as uint) {
