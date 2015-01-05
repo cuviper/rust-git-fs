@@ -95,14 +95,14 @@ impl InodeMapper {
         match id {
             Id::Ino(ino) => ino,
             Id::Oid(oid) => {
-                match self.oids.entry(oid) {
+                match self.oids.entry(&oid) {
                     hash_map::Entry::Occupied(entry) => *entry.get(),
                     hash_map::Entry::Vacant(entry) => {
                         // NB can't call new_ino because entry holds mut
                         self.max_ino += 1;
                         let ino = self.max_ino;
                         self.inos.insert(ino, oid);
-                        *entry.set(ino)
+                        *entry.insert(ino)
                     },
                 }
             },
@@ -127,7 +127,8 @@ impl InodeContainer {
         self.inodes.get_mut(&ino).ok_or(posix88::ENOENT)
     }
 
-    pub fn entry(&mut self, ino: u64) -> hash_map::Entry<u64, Box<Inode+'static>> {
+    pub fn entry<'a>(&'a mut self, ino: &'a u64)
+    -> hash_map::Entry<'a, u64, u64, Box<Inode+'static>> {
         self.inodes.entry(ino)
     }
 }

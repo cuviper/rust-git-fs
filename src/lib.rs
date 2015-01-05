@@ -143,10 +143,10 @@ impl fuse::Filesystem for GitFS {
         };
         let ino = self.mapper.get_ino(id);
 
-        if let hash_map::Entry::Vacant(entry) = self.inodes.entry(ino) {
+        if let hash_map::Entry::Vacant(entry) = self.inodes.entry(&ino) {
             if let Some(oid) = self.mapper.get_oid(ino) {
                 if let Some(inode) = inode::new_inode(&self.repo, oid) {
-                    entry.set(inode);
+                    entry.insert(inode);
                 }
             }
         }
