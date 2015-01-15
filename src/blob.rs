@@ -24,11 +24,11 @@ pub struct Blob {
 
 impl Blob {
     pub fn new(blob: git2::Blob) -> Box<inode::Inode+'static> {
-        box Blob {
+        Box::new(Blob {
             oid: blob.id(),
             size: blob.content().len() as u64,
             data: None,
-        }
+        })
     }
 }
 
@@ -44,7 +44,7 @@ impl inode::Inode for Blob {
         })
     }
 
-    fn open(&mut self, repo: &git2::Repository, _flags: uint) -> Result<u32, libc::c_int> {
+    fn open(&mut self, repo: &git2::Repository, _flags: u32) -> Result<u32, libc::c_int> {
         if self.data.is_none() {
             if let Ok(blob) = repo.find_blob(self.oid) {
                 self.data = Some(blob.content().to_vec());
@@ -55,13 +55,13 @@ impl inode::Inode for Blob {
         Ok(fuse::consts::FOPEN_KEEP_CACHE)
     }
 
-    fn read(&mut self, _repo: &git2::Repository, offset: u64, size: uint
+    fn read(&mut self, _repo: &git2::Repository, offset: u64, size: u32
            ) -> Result<&[u8], libc::c_int> {
         if let Some(ref data) = self.data {
             if offset <= data.len() as u64 {
-                let data = data.slice_from(offset as uint);
-                return Ok(if size < data.len() {
-                    data.slice_to(size)
+                let data = data.slice_from(offset as usize);
+                return Ok(if (size as usize) < data.len() {
+                    data.slice_to(size as usize)
                 } else {
                     data
                 })

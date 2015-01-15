@@ -23,10 +23,10 @@ pub struct Tree {
 
 impl Tree {
     pub fn new(tree: git2::Tree) -> Box<Inode+'static> {
-        box Tree {
+        Box::new(Tree {
             oid: tree.id(),
             size: tree.len() as u64,
-        }
+        })
     }
 
     fn tree<'a>(&self, repo: &'a git2::Repository) -> Result<git2::Tree<'a>, libc::c_int> {
@@ -57,12 +57,12 @@ impl Inode for Tree {
     }
 
     fn readdir(&mut self, repo: &git2::Repository, offset: u64,
-               add: |Id, io::FileType, &Path| -> bool
+               mut add: Box<FnMut(Id, io::FileType, &Path) -> bool>
               ) -> Result<(), libc::c_int> {
         let len = self.size;
         self.tree(repo).map(|tree| {
             for i in range(offset, len) {
-                let e = match tree.get(i as uint) {
+                let e = match tree.get(i as usize) {
                     Some(e) => e,
                     None => continue,
                 };

@@ -22,10 +22,10 @@ pub struct Root {
 
 impl Root {
     pub fn new(head: Id, refs: Id) -> Box<Inode+'static> {
-        box Root {
+        Box::new(Root {
             head: head,
             refs: refs,
-        }
+        })
     }
 }
 
@@ -56,7 +56,7 @@ impl Inode for Root {
     }
 
     fn readdir(&mut self, _repo: &git2::Repository, offset: u64,
-               add: |Id, io::FileType, &Path| -> bool
+               mut add: Box<FnMut(Id, io::FileType, &Path) -> bool>
               ) -> Result<(), libc::c_int> {
         if offset == 0 {
             add(self.head, io::FileType::Unknown, &Path::new("HEAD"));

@@ -24,9 +24,9 @@ pub struct RefDir {
 
 impl RefDir {
     pub fn new() -> Box<inode::Inode+'static> {
-        box RefDir {
+        Box::new(RefDir {
             entries: Default::default(),
-        }
+        })
     }
 }
 
@@ -49,10 +49,10 @@ impl inode::Inode for RefDir {
     }
 
     fn readdir(&mut self, _repo: &git2::Repository, offset: u64,
-               add: |inode::Id, io::FileType, &Path| -> bool
+               mut add: Box<FnMut(inode::Id, io::FileType, &Path) -> bool>
               ) -> Result<(), libc::c_int> {
         if offset < self.entries.len() as u64 {
-            for (path, &id) in self.entries.iter().skip(offset as uint) {
+            for (path, &id) in self.entries.iter().skip(offset as usize) {
                 if add(id, io::FileType::Directory, path) {
                     break;
                 }

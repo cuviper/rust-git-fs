@@ -45,12 +45,12 @@ pub trait Inode {
     }
 
     /// Open a file.
-    fn open(&mut self, _repo: &git2::Repository, _flags: uint) -> Result<u32, libc::c_int> {
+    fn open(&mut self, _repo: &git2::Repository, _flags: u32) -> Result<u32, libc::c_int> {
         Err(posix88::EISDIR)
     }
 
     /// Read data from this Inode.
-    fn read(&mut self, _repo: &git2::Repository, _offset: u64, _size: uint
+    fn read(&mut self, _repo: &git2::Repository, _offset: u64, _size: u32
            ) -> Result<&[u8], libc::c_int> {
         Err(posix88::EISDIR)
     }
@@ -62,7 +62,7 @@ pub trait Inode {
 
     /// Read directory entries from this Inode.
     fn readdir(&mut self, _repo: &git2::Repository, _offset: u64,
-               _add: |Id, io::FileType, &Path| -> bool
+               _add: Box<FnMut(Id, io::FileType, &Path) -> bool>
               ) -> Result<(), libc::c_int> {
         Err(posix88::ENOTDIR)
     }
@@ -95,7 +95,7 @@ impl InodeMapper {
         match id {
             Id::Ino(ino) => ino,
             Id::Oid(oid) => {
-                match self.oids.entry(&oid) {
+                match self.oids.entry(oid) {
                     hash_map::Entry::Occupied(entry) => *entry.get(),
                     hash_map::Entry::Vacant(entry) => {
                         // NB can't call new_ino because entry holds mut
@@ -127,8 +127,8 @@ impl InodeContainer {
         self.inodes.get_mut(&ino).ok_or(posix88::ENOENT)
     }
 
-    pub fn entry<'a>(&'a mut self, ino: &'a u64)
-    -> hash_map::Entry<'a, u64, u64, Box<Inode+'static>> {
+    pub fn entry(&mut self, ino: u64)
+    -> hash_map::Entry<u64, Box<Inode+'static>> {
         self.inodes.entry(ino)
     }
 }

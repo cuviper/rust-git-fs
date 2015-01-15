@@ -8,10 +8,10 @@
 
 //! # GitFS: a FUSE filesystem for Git objects
 
+#![allow(unstable)]
 #![deny(missing_docs)]
 
-#![feature(phase)]
-#[phase(plugin)]
+#[macro_use] #[no_link]
 extern crate probe;
 
 extern crate fuse;
@@ -19,9 +19,9 @@ extern crate git2;
 extern crate libc;
 extern crate time;
 
-use std::c_str::ToCStr;
 use std::collections::hash_map;
 use std::default::Default;
+use std::ffi::CString;
 use std::io;
 use std::u64;
 
@@ -129,9 +129,8 @@ impl fuse::Filesystem for GitFS {
         Ok(())
     }
 
-    fn lookup(&mut self, _req: &fuse::Request, parent: u64, name: &Path,
-              reply: fuse::ReplyEntry) {
-        probe!(gitfs, lookup, parent, name.to_c_str().as_ptr());
+    fn lookup(&mut self, _req: &fuse::Request, parent: u64, name: &Path, reply: fuse::ReplyEntry) {
+        { let name = CString::from_slice(name.as_vec()); probe!(gitfs, lookup, parent, name.as_ptr()); }
 
         let repo = &self.repo;
         let id = {
@@ -143,7 +142,7 @@ impl fuse::Filesystem for GitFS {
         };
         let ino = self.mapper.get_ino(id);
 
-        if let hash_map::Entry::Vacant(entry) = self.inodes.entry(&ino) {
+        if let hash_map::Entry::Vacant(entry) = self.inodes.entry(ino) {
             if let Some(oid) = self.mapper.get_oid(ino) {
                 if let Some(inode) = inode::new_inode(&self.repo, oid) {
                     entry.insert(inode);
@@ -159,7 +158,7 @@ impl fuse::Filesystem for GitFS {
         }
     }
 
-    fn forget (&mut self, _req: &fuse::Request, _ino: u64, _nlookup: uint) {
+    fn forget (&mut self, _req: &fuse::Request, _ino: u64, _nlookup: u64) {
         probe!(gitfs, forget, _ino, _nlookup);
 
         // TODO could probably drop Oid inodes, since they're easily recreated
@@ -178,7 +177,7 @@ impl fuse::Filesystem for GitFS {
         }
     }
 
-    fn open (&mut self, _req: &fuse::Request, ino: u64, flags: uint, reply: fuse::ReplyOpen) {
+    fn open (&mut self, _req: &fuse::Request, ino: u64, flags: u32, reply: fuse::ReplyOpen) {
         probe!(gitfs, open, ino, flags);
 
         let repo = &self.repo;
@@ -188,7 +187,7 @@ impl fuse::Filesystem for GitFS {
             Err(rc) => reply.error(rc),
         }
     }
-    fn read (&mut self, _req: &fuse::Request, ino: u64, _fh: u64, offset: u64, size: uint,
+    fn read (&mut self, _req: &fuse::Request, ino: u64, _fh: u64, offset: u64, size: u32,
              reply: fuse::ReplyData) {
         probe!(gitfs, read, ino, offset, size);
 
@@ -200,7 +199,7 @@ impl fuse::Filesystem for GitFS {
         }
     }
 
-    fn release (&mut self, _req: &fuse::Request, ino: u64, _fh: u64, _flags: uint,
+    fn release (&mut self, _req: &fuse::Request, ino: u64, _fh: u64, _flags: u32,
                 _lock_owner: u64, _flush: bool, reply: fuse::ReplyEmpty) {
         probe!(gitfs, release, ino);
 
@@ -228,10 +227,10 @@ impl fuse::Filesystem for GitFS {
                 offset += 1;
                 reply.add(u64::MAX, offset, io::FileType::Directory, &Path::new(".."));
             }
-            inode.readdir(repo, offset - 2, |id, kind, path| {
+            inode.readdir(repo, offset - 2, Box::new(|id, kind, path| {
                 offset += 1;
                 reply.add(mapper.get_ino(id), offset, kind, path)
-            })
+            }))
         }) {
             Ok(()) => reply.ok(),
             Err(rc) => reply.error(rc),
