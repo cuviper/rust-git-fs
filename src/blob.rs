@@ -59,9 +59,9 @@ impl inode::Inode for Blob {
            ) -> Result<&[u8], libc::c_int> {
         if let Some(ref data) = self.data {
             if offset <= data.len() as u64 {
-                let data = data.slice_from(offset as usize);
+                let data = &data[offset as usize..];
                 return Ok(if (size as usize) < data.len() {
-                    data.slice_to(size as usize)
+                    &data[..size as usize]
                 } else {
                     data
                 })
