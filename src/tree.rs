@@ -9,7 +9,7 @@
 use git2;
 use libc;
 use libc::consts::os::posix88;
-use std::io;
+use std::old_io as io;
 
 use inode;
 use inode::{FileAttr, Id, Inode};
@@ -56,8 +56,8 @@ impl Inode for Tree {
         })
     }
 
-    fn readdir(&mut self, repo: &git2::Repository, offset: u64,
-               mut add: Box<FnMut(Id, io::FileType, &Path) -> bool>
+    fn readdir<'a>(&'a mut self, repo: &git2::Repository, offset: u64,
+               mut add: Box<FnMut(Id, io::FileType, &Path) -> bool + 'a>
               ) -> Result<(), libc::c_int> {
         let len = self.size;
         self.tree(repo).map(|tree| {

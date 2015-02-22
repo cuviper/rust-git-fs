@@ -10,7 +10,7 @@ use fuse;
 use git2;
 use libc;
 use libc::consts::os::posix88;
-use std::io;
+use std::old_io as io;
 
 use inode;
 

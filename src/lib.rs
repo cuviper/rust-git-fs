@@ -8,7 +8,15 @@
 
 //! # GitFS: a FUSE filesystem for Git objects
 
-#![allow(unstable)]
+#![feature(asm)]
+#![feature(core)]
+#![feature(io)]
+#![feature(libc)]
+#![feature(old_io)]
+#![feature(old_path)]
+#![feature(os)]
+#![feature(std_misc)]
+
 #![deny(missing_docs)]
 
 #[macro_use] #[no_link]
@@ -22,7 +30,9 @@ extern crate time;
 use std::collections::hash_map;
 use std::default::Default;
 use std::ffi::CString;
-use std::io;
+use std::ffi::OsString;
+use std::ffi::AsOsStr;
+use std::old_io as io;
 use std::u64;
 
 use inode::{Id, InodeContainer, InodeMapper};
@@ -67,9 +77,9 @@ impl GitFS {
         self.repo.path()
     }
 
-    fn mount_options(&self) -> Vec<u8> {
-        let mut options = b"-oro,default_permissions,fsname=".to_vec();
-        options.push_all(self.repo.path().as_vec()); // FIXME escape commas?
+    fn mount_options(&self) -> OsString {
+        let mut options = OsString::from_str("-oro,default_permissions,fsname=");
+        options.push_os_str(self.repo.path().as_os_str()); // FIXME escape commas?
         options
     }
 
@@ -80,17 +90,17 @@ impl GitFS {
         self.mountdir = DirHandle::new(mountpoint);
 
         let options = self.mount_options();
-        fuse::mount(self, mountpoint, &[options.as_slice()])
+        fuse::mount(self, mountpoint, &[&options])
     }
 
     /// Mount the filesystem in the background.  It will remain mounted until the returned session
     /// object is dropped, or an external umount is issued.
-    pub fn spawn_mount(mut self, mountpoint: &Path) -> fuse::BackgroundSession {
+    pub fn spawn_mount(mut self, mountpoint: &Path) -> std::io::Result<fuse::BackgroundSession> {
         // Create/remove the mount point if it doesn't exist
         self.mountdir = DirHandle::new(mountpoint);
 
         let options = self.mount_options();
-        fuse::spawn_mount(self, mountpoint, &[options.as_slice()])
+        fuse::spawn_mount(self, mountpoint, &[&options])
     }
 
     fn defattr(&self, ino: u64) -> fuse::FileAttr {
@@ -130,7 +140,9 @@ impl fuse::Filesystem for GitFS {
     }
 
     fn lookup(&mut self, _req: &fuse::Request, parent: u64, name: &Path, reply: fuse::ReplyEntry) {
-        { let name = CString::from_slice(name.as_vec()); probe!(gitfs, lookup, parent, name.as_ptr()); }
+        if let Ok(name) = CString::new(name.as_vec()) {
+            probe!(gitfs, lookup, parent, name.as_ptr());
+        }
 
         let repo = &self.repo;
         let id = {

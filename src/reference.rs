@@ -11,7 +11,7 @@ use libc;
 use libc::consts::os::posix88;
 use std::collections::hash_map;
 use std::default::Default;
-use std::io;
+use std::old_io as io;
 
 use inode;
 
@@ -48,8 +48,8 @@ impl inode::Inode for RefDir {
         })
     }
 
-    fn readdir(&mut self, _repo: &git2::Repository, offset: u64,
-               mut add: Box<FnMut(inode::Id, io::FileType, &Path) -> bool>
+    fn readdir<'a>(&mut self, _repo: &git2::Repository, offset: u64,
+               mut add: Box<FnMut(inode::Id, io::FileType, &Path) -> bool + 'a>
               ) -> Result<(), libc::c_int> {
         if offset < self.entries.len() as u64 {
             for (path, &id) in self.entries.iter().skip(offset as usize) {
