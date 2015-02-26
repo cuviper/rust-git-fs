@@ -9,7 +9,7 @@
 use git2;
 use libc;
 use libc::consts::os::posix88;
-use std::old_io as io;
+use std::old_io::{FileType, USER_DIR};
 
 use inode;
 use inode::{FileAttr, Id, Inode};
@@ -49,20 +49,20 @@ impl Inode for Root {
         Ok(FileAttr {
             size: size,
             blocks: inode::st_blocks(size),
-            kind: io::FileType::Directory,
-            perm: io::USER_DIR,
+            kind: FileType::Directory,
+            perm: USER_DIR,
             ..attr
         })
     }
 
     fn readdir<'a>(&mut self, _repo: &git2::Repository, offset: u64,
-               mut add: Box<FnMut(Id, io::FileType, &Path) -> bool + 'a>
+               mut add: Box<FnMut(Id, FileType, &Path) -> bool + 'a>
               ) -> Result<(), libc::c_int> {
         if offset == 0 {
-            add(self.head, io::FileType::Unknown, &Path::new("HEAD"));
+            add(self.head, FileType::Unknown, &Path::new("HEAD"));
         }
         if offset <= 1 {
-            add(self.refs, io::FileType::Unknown, &Path::new("refs"));
+            add(self.refs, FileType::Unknown, &Path::new("refs"));
         }
         Ok(())
     }

@@ -10,7 +10,7 @@ use fuse;
 use git2;
 use libc;
 use libc::consts::os::posix88;
-use std::old_io as io;
+use std::old_io::{FileType, USER_FILE};
 
 use inode;
 
@@ -38,8 +38,8 @@ impl inode::Inode for Blob {
         Ok(inode::FileAttr {
             size: self.size,
             blocks: inode::st_blocks(self.size),
-            kind: io::FileType::RegularFile,
-            perm: io::USER_FILE,
+            kind: FileType::RegularFile,
+            perm: USER_FILE,
             ..attr
         })
     }

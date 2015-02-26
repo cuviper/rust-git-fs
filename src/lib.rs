@@ -10,11 +10,13 @@
 
 #![feature(asm)]
 #![feature(core)]
+#![feature(fs)]
 #![feature(io)]
 #![feature(libc)]
 #![feature(old_io)]
 #![feature(old_path)]
 #![feature(os)]
+#![feature(path)]
 #![feature(std_misc)]
 
 #![deny(missing_docs)]
@@ -32,7 +34,10 @@ use std::default::Default;
 use std::ffi::CString;
 use std::ffi::OsString;
 use std::ffi::AsOsStr;
-use std::old_io as io;
+use std::fs;
+use std::old_io::FileType;
+use std::old_path::PosixPath;
+use std::path::{AsPath, Path, PathBuf};
 use std::u64;
 
 use inode::{Id, InodeContainer, InodeMapper};
@@ -73,7 +78,7 @@ impl GitFS {
     }
 
     /// Get the resolved GIT_DIR.
-    pub fn git_dir(&self) -> Path {
+    pub fn git_dir(&self) -> &Path {
         self.repo.path()
     }
 
@@ -85,9 +90,9 @@ impl GitFS {
 
     /// Mount the filesystem and wait until the path is unmounted, e.g. with the command
     /// `fusermount -u PATH`.
-    pub fn mount(mut self, mountpoint: &Path) {
+    pub fn mount<P: AsPath>(mut self, mountpoint: &P) {
         // Create/remove the mount point if it doesn't exist
-        self.mountdir = DirHandle::new(mountpoint);
+        self.mountdir = DirHandle::new(mountpoint.as_path());
 
         let options = self.mount_options();
         fuse::mount(self, mountpoint, &[&options])
@@ -95,9 +100,9 @@ impl GitFS {
 
     /// Mount the filesystem in the background.  It will remain mounted until the returned session
     /// object is dropped, or an external umount is issued.
-    pub fn spawn_mount(mut self, mountpoint: &Path) -> std::io::Result<fuse::BackgroundSession> {
+    pub fn spawn_mount<P: AsPath>(mut self, mountpoint: &P) -> std::io::Result<fuse::BackgroundSession> {
         // Create/remove the mount point if it doesn't exist
-        self.mountdir = DirHandle::new(mountpoint);
+        self.mountdir = DirHandle::new(mountpoint.as_path());
 
         let options = self.mount_options();
         fuse::spawn_mount(self, mountpoint, &[&options])
@@ -112,7 +117,7 @@ impl GitFS {
             mtime: self.epoch,
             ctime: self.epoch,
             crtime: self.epoch,
-            kind: io::FileType::Unknown,
+            kind: FileType::Unknown,
             perm: Default::default(),
             nlink: 1,
             uid: self.uid,
@@ -139,7 +144,7 @@ impl fuse::Filesystem for GitFS {
         Ok(())
     }
 
-    fn lookup(&mut self, _req: &fuse::Request, parent: u64, name: &Path, reply: fuse::ReplyEntry) {
+    fn lookup(&mut self, _req: &fuse::Request, parent: u64, name: &PosixPath, reply: fuse::ReplyEntry) {
         if let Ok(name) = CString::new(name.as_vec()) {
             probe!(gitfs, lookup, parent, name.as_ptr());
         }
@@ -233,11 +238,11 @@ impl fuse::Filesystem for GitFS {
         match inode.and_then(|inode| {
             if offset == 0 {
                 offset += 1;
-                reply.add(u64::MAX, offset, io::FileType::Directory, &Path::new("."));
+                reply.add(u64::MAX, offset, FileType::Directory, &PosixPath::new("."));
             }
             if offset == 1 {
                 offset += 1;
-                reply.add(u64::MAX, offset, io::FileType::Directory, &Path::new(".."));
+                reply.add(u64::MAX, offset, FileType::Directory, &PosixPath::new(".."));
             }
             inode.readdir(repo, offset - 2, Box::new(|id, kind, path| {
                 offset += 1;
@@ -253,18 +258,20 @@ impl fuse::Filesystem for GitFS {
 
 /// Helper for mkdir, ensuring rmdir when dropped
 struct DirHandle {
-    path: Path,
+    path: PathBuf,
 }
 
 impl DirHandle {
     fn new(path: &Path) -> Option<DirHandle> {
-        io::fs::mkdir(path, io::USER_DIR).ok()
-            .map(|()| DirHandle { path: path.clone() })
+        match fs::create_dir(path) {
+            Ok(()) => Some(DirHandle { path: path.to_path_buf() }),
+            Err(_) => None,
+        }
     }
 }
 
 impl Drop for DirHandle {
     fn drop(&mut self) {
-        io::fs::rmdir(&self.path).ok();
+        fs::remove_dir(&self.path).ok();
     }
 }

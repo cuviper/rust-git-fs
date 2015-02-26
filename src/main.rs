@@ -17,26 +17,26 @@
 //! - MOUNTPOINT: The target to mount the filesystem.  Defaults to GIT_DIR/fs.
 
 #![feature(env)]
-#![feature(old_path)]
 #![feature(os)]
+#![feature(path)]
 #![feature(std_misc)]
 
 extern crate gitfs;
 
-use std::os::unix::OsStrExt;
-use std::ffi::OsString;
+use std::ffi::{AsOsStr, OsStr, OsString};
+use std::path::AsPath;
 
 fn main() {
     let args: Vec<OsString> = std::env::args_os().collect();
 
     // If unspecified, source defaults to the current directory
-    let source = if args.len() > 1 { args[1].as_bytes() } else { b"." };
+    let source: &OsStr = if args.len() > 1 { &args[1] } else { ".".as_os_str() };
 
-    match gitfs::GitFS::new(&Path::new(source)) {
+    match gitfs::GitFS::new(source.as_path()) {
         Ok(fs) => {
             // If unspecified, the target default to GIT_DIR/fs
             let target = if args.len() > 2 {
-                Path::new(args[2].as_bytes())
+                args[2].as_path().to_path_buf()
             } else { 
                 fs.git_dir().join("fs")
             };

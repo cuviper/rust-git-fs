@@ -10,7 +10,7 @@ use git2;
 use libc;
 use libc::consts::os::posix88;
 use std::collections::hash_map;
-use std::old_io as io;
+use std::old_io::FileType;
 
 use blob;
 use tree;
@@ -62,7 +62,7 @@ pub trait Inode: Send {
 
     /// Read directory entries from this Inode.
     fn readdir<'a>(&'a mut self, _repo: &git2::Repository, _offset: u64,
-               _add: Box<FnMut(Id, io::FileType, &Path) -> bool + 'a>
+               _add: Box<FnMut(Id, FileType, &Path) -> bool + 'a>
               ) -> Result<(), libc::c_int> {
         Err(posix88::ENOTDIR)
     }
