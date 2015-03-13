@@ -16,7 +16,6 @@
 //!
 //! - MOUNTPOINT: The target to mount the filesystem.  Defaults to GIT_DIR/fs.
 
-#![feature(os)]
 #![feature(path)]
 #![feature(std_misc)]
 

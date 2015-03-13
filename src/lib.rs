@@ -10,12 +10,10 @@
 
 #![feature(asm)]
 #![feature(core)]
-#![feature(fs)]
 #![feature(io)]
 #![feature(libc)]
 #![feature(old_io)]
 #![feature(old_path)]
-#![feature(os)]
 #![feature(path)]
 #![feature(std_misc)]
 
@@ -33,7 +31,6 @@ use std::collections::hash_map;
 use std::default::Default;
 use std::ffi::CString;
 use std::ffi::OsString;
-use std::ffi::AsOsStr;
 use std::fs;
 use std::old_io::FileType;
 use std::old_path::PosixPath;
@@ -84,7 +81,7 @@ impl GitFS {
 
     fn mount_options(&self) -> OsString {
         let mut options = OsString::from_str("-oro,default_permissions,fsname=");
-        options.push_os_str(self.repo.path().as_os_str()); // FIXME escape commas?
+        options.push(&self.repo.path()); // FIXME escape commas?
         options
     }
 
