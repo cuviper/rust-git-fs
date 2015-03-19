@@ -10,6 +10,7 @@ use git2;
 use libc;
 use libc::consts::os::posix88;
 use std::old_io::{FileType, USER_DIR};
+use std::old_path::PosixPath;
 
 use inode;
 use inode::{FileAttr, Id, Inode};
@@ -30,7 +31,7 @@ impl Root {
 }
 
 impl Inode for Root {
-    fn lookup(&mut self, repo: &git2::Repository, name: &Path
+    fn lookup(&mut self, repo: &git2::Repository, name: &PosixPath
              ) -> Result<Id, libc::c_int> {
         if name.as_vec() == b"HEAD" {
             repo.head().ok()
@@ -56,13 +57,13 @@ impl Inode for Root {
     }
 
     fn readdir<'a>(&mut self, _repo: &git2::Repository, offset: u64,
-               mut add: Box<FnMut(Id, FileType, &Path) -> bool + 'a>
+               mut add: Box<FnMut(Id, FileType, &PosixPath) -> bool + 'a>
               ) -> Result<(), libc::c_int> {
         if offset == 0 {
-            add(self.head, FileType::Unknown, &Path::new("HEAD"));
+            add(self.head, FileType::Unknown, &PosixPath::new("HEAD"));
         }
         if offset <= 1 {
-            add(self.refs, FileType::Unknown, &Path::new("refs"));
+            add(self.refs, FileType::Unknown, &PosixPath::new("refs"));
         }
         Ok(())
     }

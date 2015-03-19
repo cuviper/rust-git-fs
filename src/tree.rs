@@ -10,6 +10,7 @@ use git2;
 use libc;
 use libc::consts::os::posix88;
 use std::old_io::{FileType, USER_DIR};
+use std::old_path::PosixPath;
 use std::path::AsPath;
 
 use inode;
@@ -36,7 +37,7 @@ impl Tree {
 }
 
 impl Inode for Tree {
-    fn lookup(&mut self, repo: &git2::Repository, name: &Path
+    fn lookup(&mut self, repo: &git2::Repository, name: &PosixPath
               ) -> Result<Id, libc::c_int> {
         self.tree(repo).and_then(|tree| {
             match tree.get_path(name.as_path()) {
@@ -58,11 +59,11 @@ impl Inode for Tree {
     }
 
     fn readdir<'a>(&'a mut self, repo: &git2::Repository, offset: u64,
-               mut add: Box<FnMut(Id, FileType, &Path) -> bool + 'a>
+               mut add: Box<FnMut(Id, FileType, &PosixPath) -> bool + 'a>
               ) -> Result<(), libc::c_int> {
         let len = self.size;
         self.tree(repo).map(|tree| {
-            for i in range(offset, len) {
+            for i in (offset..len) {
                 let e = match tree.get(i as usize) {
                     Some(e) => e,
                     None => continue,
@@ -72,7 +73,7 @@ impl Inode for Tree {
                     Some(git2::ObjectType::Blob) => FileType::RegularFile,
                     _ => FileType::Unknown,
                 };
-                let path = Path::new(e.name_bytes());
+                let path = PosixPath::new(e.name_bytes());
                 if add(Id::Oid(e.id()), kind, &path) {
                     break;
                 }

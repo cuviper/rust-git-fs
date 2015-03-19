@@ -1,6 +1,5 @@
 //! Test that this very testfile is accessible in our own mount.
 
-#![feature(path)]
 #![feature(path_ext)]
 
 extern crate gitfs;

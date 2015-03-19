@@ -12,6 +12,7 @@ use libc::consts::os::posix88;
 use std::collections::hash_map;
 use std::default::Default;
 use std::old_io::{FileType, USER_DIR};
+use std::old_path::PosixPath;
 
 use inode;
 
@@ -19,7 +20,7 @@ use inode;
 /// Represents a virtual directory in reference paths
 /// (e.g. `refs/heads/master` needs intermediate `refs/` and `refs/heads/`)
 pub struct RefDir {
-    entries: hash_map::HashMap<Path, inode::Id>,
+    entries: hash_map::HashMap<PosixPath, inode::Id>,
 }
 
 impl RefDir {
@@ -31,7 +32,7 @@ impl RefDir {
 }
 
 impl inode::Inode for RefDir {
-    fn lookup(&mut self, _repo: &git2::Repository, name: &Path
+    fn lookup(&mut self, _repo: &git2::Repository, name: &PosixPath
               ) -> Result<inode::Id, libc::c_int> {
         self.entries.get(name).cloned().ok_or(posix88::ENOENT)
     }
@@ -49,7 +50,7 @@ impl inode::Inode for RefDir {
     }
 
     fn readdir<'a>(&mut self, _repo: &git2::Repository, offset: u64,
-               mut add: Box<FnMut(inode::Id, FileType, &Path) -> bool + 'a>
+               mut add: Box<FnMut(inode::Id, FileType, &PosixPath) -> bool + 'a>
               ) -> Result<(), libc::c_int> {
         if offset < self.entries.len() as u64 {
             for (path, &id) in self.entries.iter().skip(offset as usize) {

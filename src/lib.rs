@@ -10,11 +10,9 @@
 
 #![feature(asm)]
 #![feature(core)]
-#![feature(io)]
 #![feature(libc)]
 #![feature(old_io)]
 #![feature(old_path)]
-#![feature(path)]
 #![feature(std_misc)]
 
 #![deny(missing_docs)]
