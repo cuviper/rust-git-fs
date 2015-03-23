@@ -6,12 +6,13 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use fuse::FileType;
 use git2;
 use libc;
 use libc::consts::os::posix88;
-use std::old_io::{FileType, USER_DIR};
-use std::old_path::PosixPath;
-use std::path::AsPath;
+use std::ffi::OsStr;
+use std::os::unix::ffi::OsStrExt;
+use std::path::{AsPath, Path};
 
 use inode;
 use inode::{FileAttr, Id, Inode};
@@ -37,7 +38,7 @@ impl Tree {
 }
 
 impl Inode for Tree {
-    fn lookup(&mut self, repo: &git2::Repository, name: &PosixPath
+    fn lookup(&mut self, repo: &git2::Repository, name: &Path
               ) -> Result<Id, libc::c_int> {
         self.tree(repo).and_then(|tree| {
             match tree.get_path(name.as_path()) {
@@ -53,13 +54,13 @@ impl Inode for Tree {
             size: self.size,
             blocks: inode::st_blocks(self.size),
             kind: FileType::Directory,
-            perm: USER_DIR,
+            perm: 0755,
             ..attr
         })
     }
 
     fn readdir<'a>(&'a mut self, repo: &git2::Repository, offset: u64,
-               mut add: Box<FnMut(Id, FileType, &PosixPath) -> bool + 'a>
+               mut add: Box<FnMut(Id, FileType, &Path) -> bool + 'a>
               ) -> Result<(), libc::c_int> {
         let len = self.size;
         self.tree(repo).map(|tree| {
@@ -71,10 +72,10 @@ impl Inode for Tree {
                 let kind = match e.kind() {
                     Some(git2::ObjectType::Tree) => FileType::Directory,
                     Some(git2::ObjectType::Blob) => FileType::RegularFile,
-                    _ => FileType::Unknown,
+                    _ => FileType::CharDevice, /* something weird?!? unknown... */
                 };
-                let path = PosixPath::new(e.name_bytes());
-                if add(Id::Oid(e.id()), kind, &path) {
+                let os_path = <OsStr as OsStrExt>::from_bytes(e.name_bytes());
+                if add(Id::Oid(e.id()), kind, Path::new(os_path)) {
                     break;
                 }
             }

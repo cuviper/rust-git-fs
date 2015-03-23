@@ -6,11 +6,10 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use fuse;
+use fuse::{self, FileType};
 use git2;
 use libc;
 use libc::consts::os::posix88;
-use std::old_io::{FileType, USER_FILE};
 
 use inode;
 
@@ -39,7 +38,7 @@ impl inode::Inode for Blob {
             size: self.size,
             blocks: inode::st_blocks(self.size),
             kind: FileType::RegularFile,
-            perm: USER_FILE,
+            perm: 0644,
             ..attr
         })
     }

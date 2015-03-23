@@ -6,12 +6,12 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use fuse::FileType;
 use git2;
 use libc;
 use libc::consts::os::posix88;
 use std::collections::hash_map;
-use std::old_io::FileType;
-use std::old_path::PosixPath;
+use std::path::Path;
 
 use blob;
 use tree;
@@ -34,7 +34,7 @@ pub enum Id {
 /// A generic interface for different Git object types to implement.
 pub trait Inode: Send {
     /// Find a directory entry in this Inode by name.
-    fn lookup(&mut self, _repo: &git2::Repository, _name: &PosixPath
+    fn lookup(&mut self, _repo: &git2::Repository, _name: &Path
              ) -> Result<Id, libc::c_int> {
         Err(posix88::ENOTDIR)
     }
@@ -63,7 +63,7 @@ pub trait Inode: Send {
 
     /// Read directory entries from this Inode.
     fn readdir<'a>(&'a mut self, _repo: &git2::Repository, _offset: u64,
-               _add: Box<FnMut(Id, FileType, &PosixPath) -> bool + 'a>
+               _add: Box<FnMut(Id, FileType, &Path) -> bool + 'a>
               ) -> Result<(), libc::c_int> {
         Err(posix88::ENOTDIR)
     }

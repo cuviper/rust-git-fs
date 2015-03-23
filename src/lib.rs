@@ -11,8 +11,6 @@
 #![feature(asm)]
 #![feature(core)]
 #![feature(libc)]
-#![feature(old_io)]
-#![feature(old_path)]
 #![feature(std_misc)]
 
 #![deny(missing_docs)]
@@ -25,13 +23,13 @@ extern crate git2;
 extern crate libc;
 extern crate time;
 
+use fuse::FileType;
+
 use std::collections::hash_map;
 use std::default::Default;
-use std::ffi::CString;
-use std::ffi::OsString;
+use std::ffi::{OsString, AsOsStr};
+use std::os::unix::ffi::OsStrExt;
 use std::fs;
-use std::old_io::FileType;
-use std::old_path::PosixPath;
 use std::path::{AsPath, Path, PathBuf};
 use std::u64;
 
@@ -112,8 +110,8 @@ impl GitFS {
             mtime: self.epoch,
             ctime: self.epoch,
             crtime: self.epoch,
-            kind: FileType::Unknown,
-            perm: Default::default(),
+            kind: FileType::RegularFile, /* unknown... */
+            perm: 0,
             nlink: 1,
             uid: self.uid,
             gid: self.gid,
@@ -139,8 +137,8 @@ impl fuse::Filesystem for GitFS {
         Ok(())
     }
 
-    fn lookup(&mut self, _req: &fuse::Request, parent: u64, name: &PosixPath, reply: fuse::ReplyEntry) {
-        if let Ok(name) = CString::new(name.as_vec()) {
+    fn lookup(&mut self, _req: &fuse::Request, parent: u64, name: &Path, reply: fuse::ReplyEntry) {
+        if let Ok(name) = name.as_os_str().to_cstring() {
             probe!(gitfs, lookup, parent, name.as_ptr());
         }
 
@@ -233,11 +231,11 @@ impl fuse::Filesystem for GitFS {
         match inode.and_then(|inode| {
             if offset == 0 {
                 offset += 1;
-                reply.add(u64::MAX, offset, FileType::Directory, &PosixPath::new("."));
+                reply.add(u64::MAX, offset, FileType::Directory, &Path::new("."));
             }
             if offset == 1 {
                 offset += 1;
-                reply.add(u64::MAX, offset, FileType::Directory, &PosixPath::new(".."));
+                reply.add(u64::MAX, offset, FileType::Directory, &Path::new(".."));
             }
             inode.readdir(repo, offset - 2, Box::new(|id, kind, path| {
                 offset += 1;
