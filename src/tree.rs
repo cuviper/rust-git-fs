@@ -54,7 +54,7 @@ impl Inode for Tree {
             size: self.size,
             blocks: inode::st_blocks(self.size),
             kind: FileType::Directory,
-            perm: 0755,
+            perm: 0o755,
             ..attr
         })
     }

@@ -51,7 +51,7 @@ impl Inode for Root {
             size: size,
             blocks: inode::st_blocks(size),
             kind: FileType::Directory,
-            perm: 0755,
+            perm: 0o755,
             ..attr
         })
     }

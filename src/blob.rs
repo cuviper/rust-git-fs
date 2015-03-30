@@ -38,7 +38,7 @@ impl inode::Inode for Blob {
             size: self.size,
             blocks: inode::st_blocks(self.size),
             kind: FileType::RegularFile,
-            perm: 0644,
+            perm: 0o644,
             ..attr
         })
     }
