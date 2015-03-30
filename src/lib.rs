@@ -58,9 +58,9 @@ pub struct GitFS {
 
 impl GitFS {
     /// Create a GitFS referencing the given GIT_DIR.
-    pub fn new(git_dir: &Path) -> Result<GitFS, git2::Error> {
+    pub fn new<P: AsRef<Path>>(git_dir: &P) -> Result<GitFS, git2::Error> {
         Ok(GitFS {
-            repo: try!(git2::Repository::open(git_dir)),
+            repo: try!(git2::Repository::open(git_dir.as_ref())),
             epoch: time::get_time(),
             uid: unsafe { libc::getuid() },
             gid: unsafe { libc::getgid() },

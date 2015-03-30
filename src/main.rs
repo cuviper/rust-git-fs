@@ -21,7 +21,7 @@
 extern crate gitfs;
 
 use std::ffi::{AsOsStr, OsStr, OsString};
-use std::path::AsPath;
+use std::path::Path;
 
 fn main() {
     let args: Vec<OsString> = std::env::args_os().collect();
@@ -29,11 +29,11 @@ fn main() {
     // If unspecified, source defaults to the current directory
     let source: &OsStr = if args.len() > 1 { &args[1] } else { ".".as_os_str() };
 
-    match gitfs::GitFS::new(source.as_path()) {
+    match gitfs::GitFS::new(&source) {
         Ok(fs) => {
-            // If unspecified, the target default to GIT_DIR/fs
+            // If unspecified, the target defaults to GIT_DIR/fs
             let target = if args.len() > 2 {
-                args[2].as_path().to_path_buf()
+                Path::new(&args[2]).to_path_buf()
             } else { 
                 fs.git_dir().join("fs")
             };
