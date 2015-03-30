@@ -9,7 +9,7 @@
 //! # GitFS: a FUSE filesystem for Git objects
 
 #![feature(asm)]
-#![feature(core)]
+#![feature(convert)]
 #![feature(libc)]
 #![feature(std_misc)]
 
@@ -30,7 +30,7 @@ use std::default::Default;
 use std::ffi::{OsString, AsOsStr};
 use std::os::unix::ffi::OsStrExt;
 use std::fs;
-use std::path::{AsPath, Path, PathBuf};
+use std::path::{Path, PathBuf};
 use std::u64;
 
 use inode::{Id, InodeContainer, InodeMapper};
@@ -76,16 +76,16 @@ impl GitFS {
     }
 
     fn mount_options(&self) -> OsString {
-        let mut options = OsString::from_str("-oro,default_permissions,fsname=");
+        let mut options = OsString::from("-oro,default_permissions,fsname=");
         options.push(&self.repo.path()); // FIXME escape commas?
         options
     }
 
     /// Mount the filesystem and wait until the path is unmounted, e.g. with the command
     /// `fusermount -u PATH`.
-    pub fn mount<P: AsPath>(mut self, mountpoint: &P) {
+    pub fn mount<P: AsRef<Path>>(mut self, mountpoint: &P) {
         // Create/remove the mount point if it doesn't exist
-        self.mountdir = DirHandle::new(mountpoint.as_path());
+        self.mountdir = DirHandle::new(mountpoint.as_ref());
 
         let options = self.mount_options();
         fuse::mount(self, mountpoint, &[&options])
@@ -93,9 +93,9 @@ impl GitFS {
 
     /// Mount the filesystem in the background.  It will remain mounted until the returned session
     /// object is dropped, or an external umount is issued.
-    pub fn spawn_mount<P: AsPath>(mut self, mountpoint: &P) -> std::io::Result<fuse::BackgroundSession> {
+    pub fn spawn_mount<P: AsRef<Path>>(mut self, mountpoint: &P) -> std::io::Result<fuse::BackgroundSession> {
         // Create/remove the mount point if it doesn't exist
-        self.mountdir = DirHandle::new(mountpoint.as_path());
+        self.mountdir = DirHandle::new(mountpoint.as_ref());
 
         let options = self.mount_options();
         fuse::spawn_mount(self, mountpoint, &[&options])
