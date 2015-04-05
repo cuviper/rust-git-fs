@@ -28,7 +28,6 @@ use fuse::FileType;
 use std::collections::hash_map;
 use std::default::Default;
 use std::ffi::{OsString, AsOsStr};
-use std::os::unix::ffi::OsStrExt;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::u64;
@@ -138,7 +137,7 @@ impl fuse::Filesystem for GitFS {
     }
 
     fn lookup(&mut self, _req: &fuse::Request, parent: u64, name: &Path, reply: fuse::ReplyEntry) {
-        if let Ok(name) = name.as_os_str().to_cstring() {
+        if let Some(name) = name.as_os_str().to_cstring() {
             probe!(gitfs, lookup, parent, name.as_ptr());
         }
 
