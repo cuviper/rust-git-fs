@@ -12,7 +12,7 @@ use libc;
 use libc::consts::os::posix88;
 use std::ffi::OsStr;
 use std::os::unix::ffi::OsStrExt;
-use std::path::{AsPath, Path};
+use std::path::Path;
 
 use inode;
 use inode::{FileAttr, Id, Inode};
@@ -41,7 +41,7 @@ impl Inode for Tree {
     fn lookup(&mut self, repo: &git2::Repository, name: &Path
               ) -> Result<Id, libc::c_int> {
         self.tree(repo).and_then(|tree| {
-            match tree.get_path(name.as_path()) {
+            match tree.get_path(name) {
                 Ok(e) => Ok(Id::Oid(e.id())),
                 Err(_) => Err(posix88::ENOENT),
             }

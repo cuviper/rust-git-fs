@@ -11,7 +11,6 @@
 #![feature(asm)]
 #![feature(convert)]
 #![feature(libc)]
-#![feature(std_misc)]
 
 #![deny(missing_docs)]
 
@@ -27,7 +26,7 @@ use fuse::FileType;
 
 use std::collections::hash_map;
 use std::default::Default;
-use std::ffi::{OsString, AsOsStr};
+use std::ffi::OsString;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::u64;
