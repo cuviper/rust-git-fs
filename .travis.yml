@@ -1,4 +1,5 @@
 language: rust
+rust: nightly # for unstable features
 before_install:
   - sudo apt-get update
 install:
