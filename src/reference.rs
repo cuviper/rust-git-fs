@@ -34,10 +34,6 @@ impl RefDir {
 impl inode::Inode for RefDir {
     fn lookup(&mut self, _repo: &git2::Repository, name: &Path
               ) -> Result<inode::Id, libc::c_int> {
-        // workaround for rust-lang/rust#23649
-        let name_buf = name.to_path_buf();
-        let name = &name_buf;
-
         self.entries.get(name).cloned().ok_or(posix88::ENOENT)
     }
 
