@@ -64,7 +64,7 @@ impl Inode for Tree {
               ) -> Result<(), libc::c_int> {
         let len = self.size;
         self.tree(repo).map(|tree| {
-            for i in (offset..len) {
+            for i in offset..len {
                 let e = match tree.get(i as usize) {
                     Some(e) => e,
                     None => continue,
