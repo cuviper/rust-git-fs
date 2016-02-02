@@ -9,7 +9,6 @@
 use fuse::FileType;
 use git2;
 use libc;
-use libc::consts::os::posix88;
 use std::collections::hash_map;
 use std::default::Default;
 use std::path::{Path, PathBuf};
@@ -34,7 +33,7 @@ impl RefDir {
 impl inode::Inode for RefDir {
     fn lookup(&mut self, _repo: &git2::Repository, name: &Path
               ) -> Result<inode::Id, libc::c_int> {
-        self.entries.get(name).cloned().ok_or(posix88::ENOENT)
+        self.entries.get(name).cloned().ok_or(libc::ENOENT)
     }
 
     fn getattr(&mut self, _repo: &git2::Repository, attr: inode::FileAttr

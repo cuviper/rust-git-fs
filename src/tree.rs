@@ -9,7 +9,6 @@
 use fuse::FileType;
 use git2;
 use libc;
-use libc::consts::os::posix88;
 use std::ffi::OsStr;
 use std::os::unix::ffi::OsStrExt;
 use std::path::Path;
@@ -33,7 +32,7 @@ impl Tree {
     }
 
     fn tree<'a>(&self, repo: &'a git2::Repository) -> Result<git2::Tree<'a>, libc::c_int> {
-        repo.find_tree(self.oid).map_err(|_| posix88::EINVAL)
+        repo.find_tree(self.oid).map_err(|_| libc::EINVAL)
     }
 }
 
@@ -43,7 +42,7 @@ impl Inode for Tree {
         self.tree(repo).and_then(|tree| {
             match tree.get_path(name) {
                 Ok(e) => Ok(Id::Oid(e.id())),
-                Err(_) => Err(posix88::ENOENT),
+                Err(_) => Err(libc::ENOENT),
             }
         })
     }

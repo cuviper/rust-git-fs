@@ -14,10 +14,11 @@ test = false
 doc = false
 
 [dependencies]
-#fuse = "0"
+fuse = "0"
 git2 = "0"
-probe = "0"
+libc = "0"
 time = "0"
 
-[dependencies.fuse]
-git = "https://github.com/zargony/rust-fuse"
+[dependencies.probe]
+version = "0"
+optional = true

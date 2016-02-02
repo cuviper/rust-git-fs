@@ -9,7 +9,6 @@
 use fuse::FileType;
 use git2;
 use libc;
-use libc::consts::os::posix88;
 use std::path::Path;
 
 use inode;
@@ -41,7 +40,7 @@ impl Inode for Root {
         else if name == Path::new("refs") {
             Some(self.refs)
         }
-        else { None }.ok_or(posix88::ENOENT)
+        else { None }.ok_or(libc::ENOENT)
     }
 
     fn getattr(&mut self, _repo: &git2::Repository, attr: FileAttr

@@ -9,7 +9,6 @@
 use fuse::FileType;
 use git2;
 use libc;
-use libc::consts::os::posix88;
 use std::collections::hash_map;
 use std::path::Path;
 
@@ -36,36 +35,36 @@ pub trait Inode: Send {
     /// Find a directory entry in this Inode by name.
     fn lookup(&mut self, _repo: &git2::Repository, _name: &Path
              ) -> Result<Id, libc::c_int> {
-        Err(posix88::ENOTDIR)
+        Err(libc::ENOTDIR)
     }
 
     /// Get the attributes of this Inode.
     fn getattr(&mut self, _repo: &git2::Repository, _attr: FileAttr
               ) -> Result<FileAttr, libc::c_int> {
-        Err(posix88::EINVAL)
+        Err(libc::EINVAL)
     }
 
     /// Open a file.
     fn open(&mut self, _repo: &git2::Repository, _flags: u32) -> Result<u32, libc::c_int> {
-        Err(posix88::EISDIR)
+        Err(libc::EISDIR)
     }
 
     /// Read data from this Inode.
     fn read(&mut self, _repo: &git2::Repository, _offset: u64, _size: u32
            ) -> Result<&[u8], libc::c_int> {
-        Err(posix88::EISDIR)
+        Err(libc::EISDIR)
     }
 
     /// Release data from an opened file.
     fn release(&mut self, _repo: &git2::Repository) -> Result<(), libc::c_int> {
-        Err(posix88::EISDIR)
+        Err(libc::EISDIR)
     }
 
     /// Read directory entries from this Inode.
     fn readdir<'a>(&'a mut self, _repo: &git2::Repository, _offset: u64,
                _add: Box<FnMut(Id, FileType, &Path) -> bool + 'a>
               ) -> Result<(), libc::c_int> {
-        Err(posix88::ENOTDIR)
+        Err(libc::ENOTDIR)
     }
 }
 
@@ -125,7 +124,7 @@ impl InodeContainer {
     }
 
     pub fn find_mut(&mut self, ino: u64) -> Result<&mut Box<Inode+'static>, libc::c_int> {
-        self.inodes.get_mut(&ino).ok_or(posix88::ENOENT)
+        self.inodes.get_mut(&ino).ok_or(libc::ENOENT)
     }
 
     pub fn entry(&mut self, ino: u64)

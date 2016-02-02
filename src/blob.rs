@@ -9,7 +9,6 @@
 use fuse::{self, FileType};
 use git2;
 use libc;
-use libc::consts::os::posix88;
 
 use inode;
 
@@ -48,7 +47,7 @@ impl inode::Inode for Blob {
             if let Ok(blob) = repo.find_blob(self.oid) {
                 self.data = Some(blob.content().to_vec());
             } else {
-                return Err(posix88::EIO)
+                return Err(libc::EIO)
             }
         }
         Ok(fuse::consts::FOPEN_KEEP_CACHE)
@@ -66,7 +65,7 @@ impl inode::Inode for Blob {
                 })
             }
         }
-        Err(posix88::EINVAL)
+        Err(libc::EINVAL)
     }
 
     fn release (&mut self, _repo: &git2::Repository) -> Result<(), libc::c_int> {

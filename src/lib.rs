@@ -8,12 +8,12 @@
 
 //! # GitFS: a FUSE filesystem for Git objects
 
-#![feature(asm)]
-#![feature(convert)]
-#![feature(libc)]
+#![cfg_attr(feature="probe", feature(asm))]
 
 #![deny(missing_docs)]
 
+
+#[cfg(feature="probe")]
 #[macro_use] #[no_link]
 extern crate probe;
 
@@ -26,7 +26,8 @@ use fuse::FileType;
 
 use std::collections::hash_map;
 use std::default::Default;
-use std::ffi::OsString;
+use std::ffi::{CString, OsString};
+use std::os::unix::ffi::OsStrExt;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::u64;
@@ -41,6 +42,17 @@ mod root;
 
 
 const TTY: time::Timespec = time::Timespec { sec: 1, nsec: 0 };
+
+
+// NULL implementation of probe!()
+// XXX would be nice if libprobe could toggle feature(asm) itself
+// ... based on whether a nightly compiler is active.
+#[cfg(not(feature="probe"))]
+macro_rules! probe(
+    ($provider:ident, $name:ident) => ();
+    ($provider:ident, $name:ident, $($arg:expr),*)
+    => (if false { match ($($arg,)*) { _ => () }});
+);
 
 
 /// The main object implementing a FUSE filesystem.
@@ -91,7 +103,7 @@ impl GitFS {
 
     /// Mount the filesystem in the background.  It will remain mounted until the returned session
     /// object is dropped, or an external umount is issued.
-    pub fn spawn_mount<P: AsRef<Path>>(mut self, mountpoint: &P) -> std::io::Result<fuse::BackgroundSession> {
+    pub unsafe fn spawn_mount<P: AsRef<Path>>(mut self, mountpoint: &P) -> std::io::Result<fuse::BackgroundSession> {
         // Create/remove the mount point if it doesn't exist
         self.mountdir = DirHandle::new(mountpoint.as_ref());
 
@@ -136,7 +148,7 @@ impl fuse::Filesystem for GitFS {
     }
 
     fn lookup(&mut self, _req: &fuse::Request, parent: u64, name: &Path, reply: fuse::ReplyEntry) {
-        if let Some(name) = name.as_os_str().to_cstring() {
+        if let Ok(name) = CString::new(name.as_os_str().as_bytes()) {
             probe!(gitfs, lookup, parent, name.as_ptr());
         }
 

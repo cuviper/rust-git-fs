@@ -1,11 +1,14 @@
 //! Test that this very testfile is accessible in our own mount.
 
-#![feature(path_ext)]
-
 extern crate gitfs;
 
-use std::fs::PathExt;
+use std::fs;
 use std::path::Path;
+
+// FIXME: use PathExt::exists() once stable
+fn exists(path: &Path) -> bool {
+    fs::metadata(path).is_ok()
+}
 
 #[test]
 fn mounted_test_exists() {
@@ -16,13 +19,13 @@ fn mounted_test_exists() {
     // NB: If this isn't a git checkout, we'll fail here, sorry!
     let fs = gitfs::GitFS::new(&git_dir).unwrap();
 
-    assert!(!file.exists(), "{:?} shouldn't exist before mounting!", file);
+    assert!(!exists(&file), "{:?} shouldn't exist before mounting!", file);
 
-    let session = fs.spawn_mount(&mount).unwrap();
+    let session = unsafe { fs.spawn_mount(&mount) }.unwrap();
 
-    assert!(file.exists(), "{:?} should exist in the mount!", file);
+    assert!(exists(&file), "{:?} should exist in the mount!", file);
 
     drop(session);
 
-    assert!(!file.exists(), "{:?} shouldn't exist after unmounting!", file);
+    assert!(!exists(&file), "{:?} shouldn't exist after unmounting!", file);
 }

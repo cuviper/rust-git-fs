@@ -1,10 +1,17 @@
 language: rust
-rust: nightly # for unstable features
-before_install:
-  - sudo apt-get update
-install:
-  - sudo apt-get install libfuse-dev
+rust:
+  - stable
+  - beta
+  - nightly
+sudo: false
+addons:
+  apt:
+    packages:
+    - libfuse-dev
 script:
   - cargo build --verbose
+  - |
+    [ $TRAVIS_RUST_VERSION != nightly ] ||
+    cargo build --verbose --features=probe
 notifications:
   on_success: never
