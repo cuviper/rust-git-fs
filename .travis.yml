@@ -8,6 +8,9 @@ addons:
   apt:
     packages:
     - libfuse-dev
+    - libgit2-dev
+    - libssh2-1-dev
+    - libssl-dev
 script:
   - cargo build --verbose
   - |
